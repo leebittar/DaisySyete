@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valenzuela City Client Satisfaction Survey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define Custom Colors based on the images */
+        :root {
+            --color-dark-blue: #143D5C; /* Main dark blue for headers/buttons */
+            --color-medium-blue: #235882; /* Slightly lighter blue for some accents/icons */
+            --color-light-blue-bg: #F8FAFF; /* Very light blue background in forms */
+            --color-light-blue-fill: #E5F0FF; /* Light blue button/highlight fill */
+            --color-green-success: #70E090; /* Bright green success button */
+            --color-progress-bar: #2B6CB0; /* Progress bar color */
+        }
+
+        /* Custom styles to match the images more closely */
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+            background-color: var(--color-progress-bar);
+        }
+        .form-section {
+            border: 1px solid #cce5ff; 
+            background-color: var(--color-light-blue-bg);
+        }
+        .form-header {
+            background-color: var(--color-dark-blue);
+        }
+        .submit-btn {
+            background-color: var(--color-dark-blue);
+        }
+        .go-back-btn-fill {
+            background-color: var(--color-light-blue-fill);
+            color: var(--color-dark-blue);
+        }
+        .success-btn {
+            background-color: var(--color-green-success);
+            color: var(--color-dark-blue); /* Text color matching the image */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .mood-icon {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--color-dark-blue); /* Icon placeholder color */
+        }
+        .mood-icon.selected {
+            border-color: var(--color-dark-blue);
+            background-color: var(--color-light-blue-fill);
+        }
+        /* Modal backdrop styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* Hidden by default */
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            max-width: 500px;
+            width: 90%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-dark-blue); /* Border matching image border */
+        }
+        /* Style for the close 'X' button in modals */
+        .modal-close-x {
+            color: var(--color-dark-blue);
+        }
+        /* Body style to gray out content behind the initial modal */
+        body.modal-open {
+            overflow: hidden;
+        }
+        /* Style for disabling CC2/CC3 inputs when CC1=4 */
+        #form-2 .disabled-cc label {
+            color: #9ca3af; /* Tailwind gray-400 for blacked-out text */
+            cursor: not-allowed;
+            pointer-events: none; /* Disables clicking the label */
+        }
+        #form-2 .disabled-cc input[type="radio"] {
+            opacity: 0.6; /* Dim the radio button */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+    <div id="survey-container" class="max-w-3xl mx-auto py-4 px-2 sm:px-4 md:py-8 md:px-6">
+
+        <div id="survey-header" class="hidden sticky top-0 bg-gray-100 z-10 pt-2 pb-4">
+            <div class="flex items-center justify-between text-sm mb-2 text-gray-700">
+                <a href="#" id="back-button" class="flex items-center text-lg text-gray-700 font-semibold hover:text-blue-700">
+                    <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    Back
+                </a>
+                <a href="#" id="next-button" class="hidden flex items-center text-lg text-gray-700 font-semibold hover:text-blue-700">
+                    Next
+                    <svg class="w-6 h-6 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </a>
+            </div>
+            <div class="h-2 bg-gray-300 rounded-full">
+                <div id="progress-bar" class="progress-bar h-2 rounded-full" style="width: 0%;"></div>
+            </div>
+            <div id="progress-text" class="text-right text-sm mt-1 text-gray-700">0% Complete</div>
+        </div>
+
+        <form id="form-1" class="hidden survey-form">
+            <a href="#" id="form1-home-link" class="flex items-center text-lg font-semibold mb-6 text-gray-700 hover:text-blue-700">
+                <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Go Back
+            </a>
+            <div class="text-center mb-8">
+                <div class="mx-auto w-24 h-24 mb-4">
+                    <div class="w-full h-full rounded-full flex items-center justify-center text-sm font-bold text-gray-800">
+                        <img src="User View/Survey/surveylogo.png" alt="">
+                    </div>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800" style="color: var(--color-dark-blue);">CITY GOVERNMENT OF VALENZUELA</h1>
+                <p class="text-sm text-gray-600">HELP US SERVE YOU BETTER!</p>
+                <p class="mt-4 text-sm text-gray-500 max-w-lg mx-auto">This Client Satisfaction Measurement (CSM) tracks the customer experience of government offices. Your feedback on your **recently concluded transaction** will help this office provide a better service. Personal information shared will be kept confidential and you always have the option to not answer this form.</p>
+                <a href="#" id="see-privacy-notice-link" class="text-blue-700 text-sm mt-2 inline-block font-semibold" onclick="showModal('data-privacy-modal'); return false;">See Data Privacy Notice</a>
+                <div class="border-t border-gray-300 mt-4"></div>
+            </div>
+
+            <div class="form-header text-white p-4 rounded-t-lg flex items-center">
+                <div class="w-8 h-8 rounded-full bg-white mr-3 flex items-center justify-center">
+                    <img src="User View/Survey/info page icon.png" alt="">
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold">CLIENT INFORMATION</h2>
+                    <p class="text-xs font-light">kindly fill in the required information bellow</p>
+                </div>
+            </div>
+
+            <div class="form-section p-6 rounded-b-lg space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-gray-700">Client Type <span class="text-red-500">*</span></span>
+                        <select name="clientType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            <option value="" disabled selected>Select Client Type</option>
+                            <option value="citizen">Citizen</option>
+                            <option value="business">Business</option>
+                            <option value="government">Government</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Date <span class="text-red-500">*</span></span>
+                        <input type="date" name="date" value="2025-10-12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                    </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-gray-700">Age <span class="text-red-500">*</span></span>
+                        <input type="number" name="age" id="age-input" placeholder="enter your age" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        <p id="age-error" class="text-red-500 text-xs mt-1 hidden">Age must be a whole number (integer).</p>
+                    </label>
+                    <label class="block">
+                        <span class="text-gray-700">Service Availed <span class="text-red-500">*</span></span>
+                        <input type="text" name="serviceAvailed" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                    </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-gray-700">Region of Residence <span class="text-red-500">*</span></span>
+                        <input type="text" name="regionOfResidence" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                    </label>
+                    <div class="block">
+                        <span class="text-gray-700">Sex <span class="text-red-500">*</span></span>
+                        <div class="mt-2 space-x-4 flex">
+                            <label class="inline-flex items-center"><input type="radio" name="sex" value="Male" required class="form-radio text-blue-600"><span class="ml-2">Male</span></label>
+                            <label class="inline-flex items-center"><input type="radio" name="sex" value="Female" class="form-radio text-blue-600"><span class="ml-2">Female</span></label>
+                            <label class="inline-flex items-center"><input type="radio" name="sex" value="Others" class="form-radio text-blue-600"><span class="ml-2">Others</span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <button type="button" onclick="validateForm(1)" class="submit-btn text-white font-bold py-3 px-12 rounded-lg hover:opacity-90 transition duration-300">NEXT</button>
+            </div>
+        </form>
+
+        <form id="form-2" class="hidden survey-form">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800">Citizen's Charter Survey</h1>
+            
+            <div class="form-header text-white p-4 rounded-lg flex items-start mb-6">
+                <div class="w-12 h-10 rounded-full bg-white mr-3 flex items-center justify-center">
+                    <img src="User View/Survey/ccs page icon.png" alt="Citizen's Charter Icon" class="w-12 h-10 object-contain">
+                </div>
+                <div class="text-sm font-light leading-snug">
+                    <p class="font-bold">INSTRUCTIONS:</p>
+                    <p>Please place a **Check mark $(\checkmark)$** in the designated box that corresponds to your answer. The Citizen Charter is an official document that reflects the services of a government agency/office including its requirements, fees, and processing times among others.</p>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="form-section p-5 rounded-lg">
+                    <label class="block text-lg font-semibold mb-3">CC1. Which of the following best describes your awareness of a CC? <span class="text-red-500">*</span></label>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="radio" name="cc1" value="1" id="cc1-aware-saw" required class="form-radio text-blue-600 cc1-input" onchange="handleCC1Change(this.value)"><span class="ml-2">I know what a CC is and I saw this office's CC</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc1" value="2" id="cc1-aware-not-saw" class="form-radio text-blue-600 cc1-input" onchange="handleCC1Change(this.value)"><span class="ml-2">I know what a CC is but did NOT see this office's CC</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc1" value="3" id="cc1-learned-saw" class="form-radio text-blue-600 cc1-input" onchange="handleCC1Change(this.value)"><span class="ml-2">I learned of the CC only when I saw this office's CC</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc1" value="4" id="cc1-unaware-not-saw" class="form-radio text-blue-600 cc1-input" onchange="handleCC1Change(this.value)"><span class="ml-2">I do not know what a CC is and did not see one in this office.</span></label>
+                        <p class="text-xs ml-6 italic text-gray-500">(Answer N/A on CC2 and CC3)</p>
+                    </div>
+                </div>
+
+                <div class="form-section p-5 rounded-lg">
+                    <label class="block text-lg font-semibold mb-3">CC2. If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was...? <span class="text-red-500">*</span></label>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="radio" name="cc2" value="Easy to see" id="cc2-easy" required class="form-radio text-blue-600"><span class="ml-2">Easy to see</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc2" value="Somewhat easy to see" id="cc2-somewhat-easy" class="form-radio text-blue-600"><span class="ml-2">Somewhat easy to see</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc2" value="Difficult to see" id="cc2-difficult" class="form-radio text-blue-600"><span class="ml-2">Difficult to see</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc2" value="Not visible at all" id="cc2-not-visible" class="form-radio text-blue-600"><span class="ml-2">Not visible at all</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc2" value="Not Applicable" id="cc2-na" class="form-radio text-blue-600"><span class="ml-2">Not Applicable</span></label>
+                    </div>
+                </div>
+
+                <div class="form-section p-5 rounded-lg">
+                    <label class="block text-lg font-semibold mb-3">CC3. If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was...? <span class="text-red-500">*</span></label>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="radio" name="cc3" value="Helped very much" id="cc3-very-much" required class="form-radio text-blue-600"><span class="ml-2">Helped very much</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc3" value="Somewhat helped" id="cc3-somewhat" class="form-radio text-blue-600"><span class="ml-2">Somewhat helped</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc3" value="Did not help" id="cc3-did-not-help" class="form-radio text-blue-600"><span class="ml-2">Did not help</span></label>
+                        <label class="flex items-center"><input type="radio" name="cc3" value="Not Applicable" id="cc3-na" class="form-radio text-blue-600"><span class="ml-2">Not Applicable</span></label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <button type="button" onclick="validateForm(2)" class="submit-btn text-white font-bold py-3 px-12 rounded-lg hover:opacity-90 transition duration-300">NEXT</button>
+            </div>
+        </form>
+
+        <form id="form-3" class="hidden survey-form">
+            <div class="form-header text-white p-4 rounded-lg flex items-start mb-6">
+                <div class="w-8 h-8 rounded-full bg-white mr-3 flex items-center justify-center">
+                    <div class="text-xl" style="color: var(--color-medium-blue);">
+                        <img src="User View/Survey/sqd page icon.png" alt="">
+                    </div> 
+                </div>
+                <div class="text-sm font-light leading-snug">
+                    <h2 class="text-base font-bold mb-1">INSTRUCTIONS:</h2>
+                    <p>For questions SQD 0–8, please select the button that best represents your answer with each statement. Choose one option only for each question.</p>
+                </div>
+            </div>
+
+            <div id="sqd-questions-container" class="space-y-4">
+                </div>
+
+            <div class="text-center mt-8">
+                <button type="button" onclick="validateForm(3)" class="submit-btn text-white font-bold py-3 px-12 rounded-lg hover:opacity-90 transition duration-300">NEXT</button>
+            </div>
+        </form>
+
+        <form id="form-4" class="hidden survey-form">
+            <div class="form-header text-white p-4 rounded-lg flex items-center mb-6">
+                <div class="w-8 h-8 rounded-full bg-white mr-3 flex items-center justify-center">
+                    <div class="text-xl" style="color: var(--color-medium-blue);">
+                        <img src="User View/Survey/suggestion page icon.png" alt="">
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold">Tell us what you think – your opinion matters! (Optional)</h2>
+            </div>
+            
+            <div class="form-section p-6 rounded-lg mb-8 space-y-4">
+                <label class="block">
+                    <span class="text-gray-700">Suggestions on how we can further improve our services (optional):</span>
+                    <textarea name="suggestions" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"></textarea>
+                </label>
+                <label class="block">
+                    <span class="text-gray-700">Email Address(optional):</span>
+                    <input type="email" name="email" id="email-input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
+                    <p id="email-error" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address (must contain @).</p>
+                </label>
+            </div>
+
+            <div class="p-4 rounded-lg border-2 border-blue-400" style="background-color: #f7fcff; border-color: #cce5ff; font-size: 0.9rem;">
+                **Note:** By clicking "Submit Survey", you acknowledge that all the information provided is accurate and you consent to the processing of your data as outlined in our Data Privacy Notice.
+            </div>
+
+            <p class="text-sm text-gray-600 italic mt-6 mb-6">Please review your answers using the "Back" button if needed, then click "Submit Survey" to complete your feedback submission.</p>
+
+            <div class="text-center">
+                <button type="button" onclick="validateForm(4)" class="submit-btn text-white font-bold py-3 px-16 rounded-lg hover:opacity-90 transition duration-300">Submit Survey</button>            
+            </div>
+        </form>
+
+    </div>
+
+    <div id="data-privacy-modal" class="modal-backdrop">
+        <div class="modal-content relative max-w-lg">
+            <button type="button" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800 modal-close-x" onclick="goToHome()">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div class="text-center p-8">
+                <div class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                    <img src="User View/Survey/dataprivacyact.png" alt="">
+                </div>
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Data Privacy Notice</h2>
+
+                <div class="text-left text-sm h-64 overflow-y-auto pr-2 mb-6">
+                    <p class="mb-4">Your privacy is important to us.</p>
+                    <p class="mb-4">All responses collected through this survey are handled in accordance with the **Data Privacy Act of 2012** and **ARTA guidelines**. The information you provide is kept strictly confidential and will be used solely for internal evaluation and the improvement of government services.</p>
+                    <p class="mb-4 font-bold">No personal or identifiable data will be shared or disclosed publicly.</p>
+                    <div class="border-t border-gray-300 my-4"></div>
+                    <p class="text-base font-semibold mb-2">Information We Collect</p>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>Basic demographic information (region, age, gender)</li>
+                        <li>Service office and type of service availed</li>
+                        <li>Client type classification</li>
+                        <li>Feedback and ratings on service quality</li>
+                        <li>Email address (optional, for follow-up purposes)</li>
+                    </ul>
+                    <p class="text-base font-semibold mt-4 mb-2">How We Use Your Information</p>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>Analyzing service quality and citizen satisfaction</li>
+                        <li>Identifying areas for improvement in government services</li>
+                        <li>Generating statistical reports and insights</li>
+                        <li>Following up on specific concerns (if email is provided)</li>
+                        <li>Compliance with transparency and accountability requirements</li>
+                    </ul>
+                    <p class="text-base font-semibold mt-4 mb-2">Data Protection</p>
+                    <p class="mb-4">We implement appropriate security measures to protect your personal information... Your data will be stored securely and retained only for as long as necessary to fulfill the purposes stated above.</p>
+                    <p class="text-base font-semibold mt-4 mb-2">Your Rights</p>
+                    <p>Under the Data Privacy Act, you have the right to:</p>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>Be informed about the collection and processing of your data</li>
+                        <li>Access your personal information</li>
+                        <li>Correct inaccurate or incomplete data</li>
+                        <li>Object to the processing of your data</li>
+                        <li>Request erasure or blocking of your data</li>
+                    </ul>
+                </div>
+                
+                <div class="border-t border-gray-300 mt-4 pt-4 flex flex-col items-center">
+                    <label class="flex items-center mb-4">
+                        <input type="checkbox" id="privacy-checkbox" class="form-checkbox text-blue-600 w-5 h-5">
+                        <span class="ml-2 text-sm">I have read and understood the **Data Privacy Notice**.</span>
+                    </label>
+                    <button type="button" id="proceed-btn" disabled class="submit-btn text-white font-bold py-2 px-8 rounded-lg opacity-50 cursor-not-allowed" onclick="proceedToSurvey()">Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="submit-confirm-modal" class="modal-backdrop">
+        <div class="modal-content relative max-w-sm text-center p-8">
+            <button type="button" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800 modal-close-x" onclick="closeModal('submit-confirm-modal')">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6" style="background-color: var(--color-dark-blue);">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9.247a3.75 3.75 0 000 5.506c.499.73 1.258 1.159 2.11 1.159h3.407A4.125 4.125 0 0018 10.5v-1.5a4.125 4.125 0 00-4.125-4.125H10.338c-.852 0-1.611.429-2.11 1.159zM8.228 9.247L6.75 7.77m1.478 1.477L9.706 12m-1.478-1.477l1.478-1.478"></path><path d="M12 21a9 9 0 100-18 9 9 0 000 18z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Are you sure to submit the survey?</h2>
+            <p class="text-sm text-gray-600 mb-6">You can always go back to review your answers! If you’re satisfied with everything click the “Submit Survey” button to complete your feedback submission.</p>
+            <div class="flex justify-center space-x-4">
+                <button type="button" onclick="closeModal('submit-confirm-modal')" class="go-back-btn-fill font-bold py-2 px-6 rounded-lg hover:opacity-90 transition duration-300">Go Back</button>
+                <button type="button" onclick="completeSurvey()" class="submit-btn text-white font-bold py-2 px-6 rounded-lg hover:opacity-90 transition duration-300">Submit Survey</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="thank-you-modal" class="modal-backdrop">
+        <div class="modal-content relative max-w-sm text-center p-8">
+            <button type="button" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800 modal-close-x" onclick="goToHome()">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6" style="background-color: var(--color-dark-blue);">
+                <img src="User View/Survey/ccs page icon.png" alt="">
+            </div>
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Thank You!</h2>
+            <p class="text-sm text-gray-600 mb-6">Your feedback has been successfully submitted. We appreciate you taking the time to help us improve our services.</p>
+            <button type="button" onclick="goToHome()" class="success-btn font-bold py-3 px-8 rounded-lg hover:opacity-90 transition duration-300">Survey Completed Successfully!</button>
+            <p class="text-xs text-gray-500 mt-4">You will be redirected to the home page shortly.</p>
+        </div>
+    </div>
+
+
+<script>
+    let currentStep = 0; // 0: No form visible, 1-4: Forms
+    let acknowledgedPrivacy = false; // State for the required check
+    const steps = [
+        { id: 'form-1', progress: 25 },
+        { id: 'form-2', progress: 50 },
+        { id: 'form-3', progress: 75 },
+        { id: 'form-4', progress: 90 }
+    ];
+
+    // --- Core Logic for SQD Questions (Form 3) ---
+    const sqdQuestions = [
+        "SQD0. I am satisfied with the service that I availed.",
+        "SQD1. I spent a reasonable amount of time for my transaction.",
+        "SQD2. The office followed the transaction's requirements and steps based on the information provided.",
+        "SQD3. The steps (including payment) I needed to do for my transaction were easy and simple.",
+        "SQD4. I easily found information about my transaction from the office or its website.",
+        "SQD5. I paid a reasonable amount of fees for my transaction. (If service was free, mark the 'N/A' option)",
+        "SQD6. I feel the office was fair to everyone, or 'walang palakasan', during my transaction.",
+        "SQD7. I was treated courteously by the staff, and (if asked for help) the staff was helpful.",
+        "SQD8. I got what I needed from the government office, or if denied, the reason was explained to me clearly."
+    ];
+    const moods = [
+        { label: 'Strongly Disagree', value: '1', icon: '<img src="User View/Survey/strongly disagree.png" alt="Strongly Disagree" class="w-12 h-10.5">' },
+        { label: 'Disagree', value: '2', icon: '<img src="User View/Survey/disagree.png" alt="Strongly Disagree" class="w-12 h-10.5">' },
+        { label: 'Neither Agree nor Disagree', value: '3', icon: '<img src="User View/Survey/neutral.png" alt="Strongly Disagree" class="w-12 h-10.5">' },
+        { label: 'Agree', value: '4', icon: '<img src="User View/Survey/agree.png" alt="Strongly Disagree" class="w-12 h-10.5">' },
+        { label: 'Strongly Agree', value: '5', icon: '<img src="User View/Survey/strongly agree.png" alt="Strongly Disagree" class="w-12 h-10.5">' },
+        { label: 'Not Applicable', value: 'NA', icon: '<img src="User View/Survey/not applicable.png" alt="Strongly Disagree" class="w-12 h-10.5">' }
+    ];
+
+    function renderSQDQuestions() {
+        const sqdContainer = document.getElementById('sqd-questions-container');
+        if (!sqdContainer) return;
+
+        let html = '';
+        sqdQuestions.forEach((qText, index) => {
+            const qId = `SQD${index}`;
+            html += `
+                <div class="form-section p-4 rounded-lg">
+                    <p class="text-sm font-semibold mb-3">${qText} <span class="text-red-500">*</span></p>
+                    <div class="flex justify-between items-center space-x-2">
+            `;
+            moods.forEach(mood => {
+                html += `
+                    <div class="flex flex-col items-center">
+                        <input type="radio" name="${qId}" value="${mood.value}" id="${qId}-${mood.value}" required class="hidden" data-label="${mood.label}">
+                        <label for="${qId}-${mood.value}" class="mood-icon text-2xl" onclick="selectMoodIcon(this, '${qId}')" title="${mood.label}">
+                            <span class="text-sm">${mood.icon}</span>
+                        </label>
+                        <span class="text-xs text-center mt-1 w-16 leading-tight">${mood.label.replace(' ', '\n')}</span>
+                    </div>
+                `;
+            });
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+        sqdContainer.innerHTML = html;
+
+        window.selectMoodIcon = (labelElement, qName) => {
+            const container = labelElement.closest('.form-section');
+            container.querySelectorAll('.mood-icon').forEach(icon => {
+                icon.classList.remove('selected');
+            });
+            labelElement.classList.add('selected');
+            // Use labelElement.previousElementSibling to find the hidden input
+            labelElement.previousElementSibling.checked = true;
+            saveFormState(3);
+        };
+    }
+
+    function handleCC1Change(selectedValue) {
+        const form2 = document.getElementById('form-2');
+        
+        // Target the containers for visual disabling
+        const cc2Container = form2.querySelector('.space-y-6 > .form-section:nth-child(2)');
+        const cc3Container = form2.querySelector('.space-y-6 > .form-section:nth-child(3)');
+
+        // Target all inputs in CC2 and CC3
+        const cc2Inputs = form2.querySelectorAll('input[name="cc2"]');
+        const cc3Inputs = form2.querySelectorAll('input[name="cc3"]');
+
+        // Target the 'Not Applicable' radio buttons (by their value/ID)
+        const cc2NA = form2.querySelector('input[name="cc2"][value="Not Applicable"]');
+        const cc3NA = form2.querySelector('input[name="cc3"][value="Not Applicable"]');
+
+        // CC1 value '4' corresponds to "I do not know what a CC is..."
+        const shouldDisable = selectedValue === '4';
+
+        if (shouldDisable) {
+            // 1. Visually disable the containers
+            cc2Container.classList.add('disabled-cc');
+            cc3Container.classList.add('disabled-cc');
+
+            // 2. Set 'Not Applicable' and disable ALL other options
+            cc2Inputs.forEach(input => {
+                input.disabled = (input.value !== 'Not Applicable');
+                if (input.value === 'Not Applicable') input.checked = true;
+            });
+            cc3Inputs.forEach(input => {
+                input.disabled = (input.value !== 'Not Applicable');
+                if (input.value === 'Not Applicable') input.checked = true;
+            });
+        } else {
+            // 1. Enable the containers
+            cc2Container.classList.remove('disabled-cc');
+            cc3Container.classList.remove('disabled-cc');
+
+            // 2. Enable ALL inputs
+            cc2Inputs.forEach(input => {
+                input.disabled = false;
+            });
+            cc3Inputs.forEach(input => {
+                input.disabled = false;
+            });
+
+            // 3. Uncheck N/A to force selection of an applicable field (since it is required)
+            if (cc2NA && cc2NA.checked) cc2NA.checked = false;
+            if (cc3NA && cc3NA.checked) cc3NA.checked = false;
+        }
+        
+        // Save the form state to retain the changes on load/return
+        saveFormState(2);
+    }
+
+    // --- Initial Setup and Event Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Attach change listener to CC1 inputs on page load
+        document.querySelectorAll('.cc1-input').forEach(input => {
+            input.addEventListener('change', (e) => handleCC1Change(e.target.value));
+        });
+        // Immediately show the Data Privacy Notice pop-up on page load
+        showModal('data-privacy-modal');
+    });
+
+    // --- Navigation and Modal Event Handlers ---
+
+    // Header Back button handler (for moving between forms)
+    document.getElementById('back-button').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentStep === 1) {
+            goToHome(); // Form 1 'Back' button always goes to index.html/Home
+        } else if (currentStep > 1) {
+            goToStep(currentStep - 1); // Go back to previous step
+        }
+    });
+
+    // Form 1 'Go Back' link handler (above the seal)
+    document.getElementById('form1-home-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        goToHome(); // Redirects to index.html
+    });
+
+    // Privacy Notice Logic
+    document.getElementById('privacy-checkbox').addEventListener('change', (e) => {
+        const proceedBtn = document.getElementById('proceed-btn');
+        acknowledgedPrivacy = e.target.checked;
+        proceedBtn.disabled = !acknowledgedPrivacy;
+        proceedBtn.classList.toggle('opacity-50', !acknowledgedPrivacy);
+        proceedBtn.classList.toggle('cursor-not-allowed', !acknowledgedPrivacy);
+        if (acknowledgedPrivacy) {
+            proceedBtn.classList.add('hover:opacity-90');
+            proceedBtn.classList.remove('hover:bg-blue-800');
+        } else {
+            proceedBtn.classList.remove('hover:opacity-90');
+        }
+    });
+
+    function proceedToSurvey() {
+        if (acknowledgedPrivacy) {
+            closeModal('data-privacy-modal');
+            goToStep(1);
+        }
+    }
+
+    // Helper functions for modals
+    function showModal(id) {
+        document.getElementById(id).style.display = 'flex';
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+        document.body.classList.remove('modal-open');
+    }
+
+    // --- Navigation and Progress Logic ---
+    function updateProgress(step) {
+        const progress = steps[step - 1].progress; // steps is 0-indexed, step is 1-indexed
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('progress-text').textContent = `${progress}% Complete`;
+    }
+
+    function showForm(step) {
+        document.querySelectorAll('.survey-form').forEach(form => form.classList.add('hidden'));
+        
+        if (step > 0) {
+            document.getElementById(`form-${step}`).classList.remove('hidden');
+            document.getElementById('survey-header').classList.remove('hidden');
+
+            // Hide the header 'Back' button for Form 1 as we use the one above the seal
+            const backBtn = document.getElementById('back-button');
+            backBtn.classList.toggle('hidden', step === 1); 
+
+            // Hide the header 'Next' button (it's only used as a placeholder)
+            document.getElementById('next-button').classList.add('hidden');
+        }
+    }
+
+    function goToStep(step) {
+        if (step < 1 || step > 4) return;
+        
+        currentStep = step;
+        updateProgress(currentStep);
+        showForm(currentStep);
+        
+        // CRITICAL FIX: Render Form 3 content before loading state
+        if (step === 3) {
+            renderSQDQuestions();
+        }
+        
+        loadFormState(currentStep);
+
+        // If the user attempts to proceed from Form 1 without acknowledging privacy, block them
+        if (step === 1 && !acknowledgedPrivacy) {
+            showModal('data-privacy-modal');
+        }
+
+        // Set up Next button for Forms 2 and 3 only (Form 1 uses the large button)
+        const nextBtn = document.getElementById('next-button');
+        if (currentStep === 2 || currentStep === 3) {
+             nextBtn.classList.remove('hidden');
+             nextBtn.onclick = (e) => {
+                e.preventDefault();
+                validateForm(currentStep);
+             };
+        } else {
+             nextBtn.classList.add('hidden');
+        }
+    }
+
+    function goToHome() {
+        // Clear all survey data (since the user is abandoning/finishing)
+        clearAllSurveyData(); 
+        
+        // This performs the required redirect to index.html
+        window.location.href = "index.html"; 
+    }
+    
+    function validateForm(step) {
+        const form = document.getElementById(`form-${step}`);
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        let ageError = document.getElementById('age-error');
+        if (ageError) ageError.classList.add('hidden'); // Reset specific age error message
+
+        if (step === 1) {
+            // 1. Check Data Privacy Acknowledgment
+            if (!acknowledgedPrivacy) {
+                showModal('data-privacy-modal');
+                return;
+            }
+
+            // 2. Age Validation (must be a whole number, non-negative integer)
+            const ageInput = document.getElementById('age-input');
+            const ageValue = ageInput.value.trim();
+            const ageNumber = Number(ageValue);
+
+            if (ageValue !== '' && (!Number.isInteger(ageNumber) || ageNumber < 1)) {
+                ageError.textContent = "Age must be a whole number (e.g., 25) and a positive number.";
+                ageError.classList.remove('hidden');
+                return; // Stop validation immediately if age is invalid
+            }
+        }
+        
+        if (step === 4) {
+            // Survey Form 4 (Optional fields validation)
+            let emailInput = document.getElementById('email-input');
+            let emailError = document.getElementById('email-error');
+            emailError.classList.add('hidden');
+            
+            const emailValue = emailInput.value.trim();
+            const requiredDomain = "@gmail.com";
+            
+            // Validation: If email is provided (not empty), it must end with "@gmail.com"
+            if (emailValue !== '' && !emailValue.toLowerCase().endsWith(requiredDomain)) {
+                emailError.textContent = `Please enter a valid email address ending with ${requiredDomain}.`;
+                emailError.classList.remove('hidden');
+                isValid = false;
+            }
+
+            // If isValid is false here, the modal will not show, and the error message remains visible.
+        }
+
+        // 3. General Required Field Validation (Runs for steps 1, 2, 3)
+        if (step < 4) {
+            requiredFields.forEach(field => {
+                if (field.type === 'radio') {
+                    const name = field.name;
+                    const radios = form.querySelectorAll(`[name="${name}"]`);
+                    let isChecked = Array.from(radios).some(r => r.checked);
+                    if (!isChecked) {
+                        isValid = false;
+                    }
+                } else if (field.tagName === 'SELECT' && !field.value) {
+                    isValid = false;
+                } else if (!field.value.trim()) {
+                    isValid = false;
+                }
+            });
+        }
+
+
+        if (isValid) {
+            saveFormState(step);
+            
+            // Special handling for Form 4 to show the submit modal instead of navigating to next step
+            if (step === 4) {
+                showModal('submit-confirm-modal');
+            } else {
+                goToStep(step + 1);
+            }
+        } else if (step < 4) {
+            // Show generic alert for any missing required field 
+            alert('Please fill out all required fields marked with an asterisk (*).');
+        }
+        
+        // No generic alert needed for Form 4 if validation fails, as the email error is specific.
+    }
+    
+    // --- Submission and Data Clearing Logic ---
+    function completeSurvey() {
+        closeModal('submit-confirm-modal');
+        showModal('thank-you-modal');
+        
+        // Final action: Clear data and redirect home after timeout (as per "shortly" message)
+        setTimeout(goToHome, 3000); 
+    }
+
+    function clearAllSurveyData() {
+        for (let i = 1; i <= 4; i++) {
+            localStorage.removeItem(`surveyFormState${i}`);
+        }
+        document.querySelectorAll('form').forEach(form => form.reset());
+        acknowledgedPrivacy = false;
+        document.querySelectorAll('.mood-icon.selected').forEach(icon => icon.classList.remove('selected'));
+    }
+
+    // --- State Management (Data Retention) Logic ---
+    function saveFormState(step) {
+        const form = document.getElementById(`form-${step}`);
+        const formData = new FormData(form);
+        const state = {};
+        for (let [name, value] of formData.entries()) {
+            state[name] = value;
+        }
+        localStorage.setItem(`surveyFormState${step}`, JSON.stringify(state));
+    }
+
+    function loadFormState(step) {
+        const form = document.getElementById(`form-${step}`);
+        const state = JSON.parse(localStorage.getItem(`surveyFormState${step}`)) || {};
+
+        // 1. Clear existing selections and visuals before loading new state
+        form.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => input.checked = false);
+        
+        // CRITICAL FIX: Clear all visual highlights for Form 3
+        if (step === 3) {
+            form.querySelectorAll('.mood-icon').forEach(icon => icon.classList.remove('selected'));
+        }
+
+        for (const name in state) {
+            // 2. Handle Text/Select inputs
+            if (!name.startsWith('SQD') && name !== 'cc1' && name !== 'cc2' && name !== 'cc3' && name !== 'sex') {
+                 const field = form.querySelector(`[name="${name}"]`);
+                 if (field) field.value = state[name];
+                 continue;
+            }
+
+            // 3. Handle Radio/Checkbox inputs (including SQD and CC questions)
+            const input = form.querySelector(`input[name="${name}"][value="${state[name]}"]`);
+            
+            if (input) {
+                input.checked = true;
+                
+                // *** FIX START: RESTORE VISUAL STATE FOR FORM 3 (SQD QUESTIONS) ***
+                if (step === 3 && name.startsWith('SQD')) {
+                    // The visual element is the <label> that contains the .mood-icon, linked by the input's ID
+                    const label = form.querySelector(`label[for="${input.id}"]`);
+                    if (label) {
+                        label.classList.add('selected'); 
+                    }
+                }
+                // *** FIX END ***
+            }
+        }
+        
+        // Rerun CC1 logic after loading state to ensure dependencies are correctly set
+        if (step === 2) {
+            const cc1Value = form.querySelector('input[name="cc1"]:checked')?.value;
+            // Pass the value (or null if none checked) to re-run the disabling logic
+            handleCC1Change(cc1Value || null); 
+        }
+    }
+</script>
+</body>
+</html>

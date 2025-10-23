@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Valenzuelife - Your Voice Matters</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary-dark": "#163973", // Original Main blue color (Navy)
+              "brand-blue": "#2563EB", // A standard blue for accents/buttons (like the '01', '02' in How It Works)
+              "dark-gray": "#374151", // Dark text color
+              "light-bg": "#F9FAFB", // Light background for the body sections
+            },
+          },
+        },
+      };
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Custom styles for the fixed header and hero background */
+      .header-bg {
+        background-color: #163973;
+      }
+
+      /* Custom font for a clean, government-like feel */
+      body {
+        font-family: "Inter", sans-serif;
+        color: #374151; /* Default dark gray text */
+        background-color: #f9fafb; /* Match light-bg */
+      }
+
+      /* Responsive padding for main content sections */
+      .section-padding {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      @media (min-width: 640px) {
+        .section-padding {
+          padding-left: 4rem;
+          padding-right: 4rem;
+        }
+      }
+      @media (min-width: 1024px) {
+        .section-padding {
+          padding-left: 8rem;
+          padding-right: 8rem;
+        }
+      }
+
+      /* FAQ Styling */
+      .faq-icon {
+        transition: transform 0.3s ease-in-out;
+      }
+
+      /* Styling for the active (open) FAQ item based on mockup color */
+      .faq-item.active {
+        background-color: #eff6ff; /* Equivalent to Tailwind bg-blue-50 */
+      }
+
+      /* CORRECTED: The default state for faq-content is collapsed and hidden */
+      .faq-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-in-out,
+          border-top-color 0.4s ease-in-out;
+        border-top: 1px solid transparent; /* Subtle blue/gray separator line */
+        padding-top: 0; /* Ensures no content padding when collapsed */
+        padding-bottom: 0; /* Ensures no content padding when collapsed */
+      }
+
+      .faq-item.active .faq-content {
+        border-top-color: #c9d6ea;
+        padding-top: 1rem; /* Apply padding when active */
+        padding-bottom: 1rem; /* Apply padding when active */
+      }
+
+      /* Apply rotation to the icon when active (open) */
+      .faq-item.active .faq-toggle .faq-icon {
+        transform: rotate(45deg); /* Rotates the plus sign into an X */
+      }
+      
+      /* Fix for the initial state of the first FAQ item's content (copied from help.html) */
+      .faq-item.initial-active .faq-content {
+        max-height: none !important; /* Forces content to show on load */
+        border-top-color: #c9d6ea !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+      }
+
+
+      /* Specific positioning and responsive sizing for the Hero image */
+      .hero-illustration {
+        width: 100%;
+        max-width: 300px;
+      }
+      @media (min-width: 1024px) {
+        .hero-illustration {
+          max-width: 450px;
+        }
+      }
+
+      /* Custom underline for the active Nav link (HOME) */
+      .nav-link.active {
+        border-bottom: 2px solid white;
+        padding-bottom: 4px;
+      }
+
+      /* --- FOOTER ARC DESIGN --- */
+      .footer-container {
+        background-color: #163973; /* Matches primary-dark */
+        color: white;
+        position: relative;
+      }
+      .footer-logo-area {
+        padding-top: 20px;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 10;
+      }
+      /* Create the inverse arc curve using a pseudo-element */
+      .footer-container::before {
+        content: none !important;
+      }
+      /* Hide the arc on small screens where the curve doesn't look good */
+      @media (max-width: 767px) {
+        .footer-container::before {
+          display: none;
+        }
+        .footer-logo-area {
+          margin-bottom: 0;
+        }
+      }
+
+      /* Specific styling for the How It Works Steps to match the new mockup */
+      .step-number {
+        font-size: 1.5rem; /* text-2xl/3xl */
+        font-weight: 800; /* font-extrabold */
+        color: #163973; /* primary-dark */
+        margin-bottom: 0.5rem;
+      }
+
+      /* Line and circles styling approximation for the How It Works section */
+      .how-it-works-line {
+        position: absolute;
+        top: 65px; /* Adjust based on step number/icon positioning */
+        width: 80%;
+        height: 2px;
+        background-color: #d1d5db; /* bg-gray-300 */
+        z-index: 0;
+        left: 10%;
+      }
+      .step-connector {
+        position: absolute;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 9999px; /* rounded-full */
+        background-color: #163973; /* primary-dark */
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+      }
+    </style>
+
+    <script>
+      const appId =
+        typeof __app_id !== "undefined" ? __app_id : "default-app-id";
+      const firebaseConfig =
+        typeof __firebase_config !== "undefined"
+          ? JSON.parse(__firebase_config)
+          : {};
+      // Note: No Firebase imports are needed as this is a static design mockup.
+    </script>
+  </head>
+  <body class="antialiased text-dark-gray">
+    <header class="header-bg sticky top-0 z-50 shadow-lg">
+      <nav
+        class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8"
+      >
+        <div class="flex items-center space-x-4">
+          <img
+            src="User View/Nav/valenzuealife.png"
+            alt="Valenzuela City Seal"
+            class="h-20 w-20 object-contain"
+          />
+          <img
+            src="User View/Nav/text.png"
+            alt="Valenzuelife Text Logo"
+            class="h-10 object-contain hidden sm:block"
+          />
+        </div>
+
+        <div class="flex-grow flex justify-center hidden md:flex">
+          <div
+            class="flex space-x-10 text-white text-sm font-bold tracking-widest"
+          >
+            <a
+              href="#"
+              class="nav-link active hover:text-blue-300 transition duration-150"
+              >HOME</a
+            >
+            <a
+              href="about.html"
+              class="nav-link hover:text-blue-300 transition duration-150"
+              >ABOUT US</a
+            >
+            <a
+              href="howitworks.html"
+              class="nav-link hover:text-blue-300 transition duration-150"
+              >HOW IT WORKS</a
+            >
+            <a
+              href="help.html"
+              class="nav-link hover:text-blue-300 transition duration-150"
+              >HELP</a
+            >
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4 flex-shrink-0">
+          <a
+            href="survey.html"
+            class="bg-white text-primary-dark font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:bg-gray-200 transition duration-150"
+          >
+            Take the Survey
+          </a>
+          <button
+            class="text-white hover:text-blue-300 transition duration-150"
+          >
+            <img
+              src="User View/Nav/adminlogin.png"
+              alt="Admin Login Shield"
+              class="h-7 w-7 object-contain"
+            />
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <section
+      class="header-bg text-white relative overflow-hidden flex items-center"
+      style="min-height: calc(100vh - 64px)"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row justify-between items-center w-full"
+      >
+        <div class="lg:w-2/3 relative z-10 py-16 lg:py-0">
+          <h1 class="text-4xl sm:text-6xl font-extrabold leading-tight mb-4">
+            Your Voice Matters. <br />Help Us Serve You Better.
+          </h1>
+          <p class="text-xl text-gray-200 mb-8 max-w-xl">
+            Share your concerns, suggestions, and feedback directly with your
+            local government. Together, we can build a more responsive and
+            efficient community.
+          </p>
+
+          <div
+            class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6"
+          >
+            <a
+              href="#"
+              class="bg-white text-primary-dark font-bold px-8 py-3 rounded-full shadow-lg hover:bg-gray-200 transition duration-300 text-center"
+            >
+              Get Started
+            </a>
+            <a
+              href="#"
+              class="bg-transparent border border-white text-white font-bold px-8 py-3 rounded-full hover:bg-white hover:text-primary-dark transition duration-300 text-center"
+            >
+              Learn More
+            </a>
+          </div>
+        </div>
+
+        <div
+          class="mt-8 lg:mt-0 lg:w-1/3 flex justify-center items-center py-16 lg:py-0"
+        >
+          <img
+            src="User View/User Home/whitesurvey.png"
+            alt="Hand holding phone taking survey"
+            class="hero-illustration object-contain"
+          />
+        </div>
+      </div>
+    </section>
+
+    <section id="about-us" class="section-padding max-w-7xl mx-auto">
+      <h2
+        class="text-center text-3xl sm:text-4xl font-extrabold text-primary-dark mb-12"
+      >
+        About Us
+      </h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="order-2 lg:order-1 flex justify-center">
+          <img
+            src="User View/User Home/aboutus.png"
+            alt="Empowering Citizens Illustration"
+            class="max-w-full h-auto"
+          />
+        </div>
+
+        <div class="order-1 lg:order-2">
+          <h3 class="text-2xl font-bold text-dark-gray mb-4">
+            Empowering Citizens, Improving Services.
+          </h3>
+          <p class="text-gray-600 leading-relaxed text-lg">
+            The ARTA CSS System connects you directly with local government.
+            We're committed to transparency, accountability, and continuous
+            improvement. Your feedback drives real change in our community—from
+            infrastructure improvements to better public services. Every voice
+            counts in shaping the future of Valenzuela.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+        <div class="p-6">
+          <img
+            src="User View/User Home/quicksimple.png"
+            alt="Quick & Simple Icon"
+            class="w-16 h-16 mx-auto mb-4 object-contain"
+          />
+          <h4 class="lg:text-lg font-bold text-primary-dark mb-2">
+            Quick & Simple
+          </h4>
+          <p class="text-sm text-gray-600">
+            Submit feedback in minutes through our easy-to-use platform. No
+            complicated forms or lengthy processes—just straightforward
+            communication with your local government.
+          </p>
+        </div>
+
+        <div class="p-6">
+          <img
+            src="User View/User Home/transparentaccountable.png"
+            alt="Transparent & Accountable Icon"
+            class="w-16 h-16 mx-auto mb-4 object-contain"
+          />
+          <h4 class="lg:text-lg font-bold text-primary-dark mb-2">
+            Transparent & Accountable
+          </h4>
+          <p class="text-sm text-gray-600">
+            We value transparency and ensure that your feedback reaches the
+            right departments. Each submission is properly documented and helps
+            us monitor progress on service delivery and improvement initiatives.
+          </p>
+        </div>
+
+        <div class="p-6">
+          <img
+            src="User View/User Home/continuousimprovement.png"
+            alt="Continuous Improvement Icon"
+            class="w-16 h-16 mx-auto mb-4 object-contain"
+          />
+          <h4 class="lg:text-lg font-bold text-primary-dark mb-2">
+            Continuous Improvement
+          </h4>
+          <p class="text-sm text-gray-600">
+            Your voice fuels change. Feedback gathered through this system is
+            analyzed and used to develop better policies, streamline processes,
+            and deliver high-quality public services that meet community needs.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="section-padding bg-gray-50">
+      <div class="max-w-7xl mx-auto">
+        <h2
+          class="text-center text-3xl sm:text-4xl font-extrabold text-primary-dark mb-12"
+        >
+          How It Works?
+        </h2>
+
+        <div class="relative hidden md:block">
+          <div class="how-it-works-line"></div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          <div class="text-center p-2 md:p-4 relative z-10">
+            <p class="step-number">01</p>
+            <div class="hidden md:block step-connector"></div>
+            <img
+              src="User View/HowitWorks/survey123.png"
+              alt="Provide Information Icon"
+              class="w-20 h-20 mx-auto mb-4 object-contain mt-8"
+            />
+            <h4 class="font-bold text-primary-dark mb-2">
+              Provide Your Information
+            </h4>
+            <p class="text-xs text-gray-600 text-left px-2">
+              Fill out a simple form with your basic details including client
+              type, age, region of residence, and the service you utilize. This
+              helps us understand who we are serving and which departments to
+              evaluate.
+            </p>
+          </div>
+
+          <div class="text-center p-2 md:p-4 relative z-10">
+            <p class="step-number">02</p>
+            <div class="hidden md:block step-connector"></div>
+            <img
+              src="User View/HowitWorks/messagebubble.png"
+              alt="Answer Awareness Questions Icon"
+              class="w-20 h-20 mx-auto mb-4 object-contain mt-8"
+            />
+            <h4 class="font-bold text-primary-dark mb-2">
+              Answer Awareness Questions
+            </h4>
+            <p class="text-xs text-gray-600 text-left px-2">
+              Tell us about your knowledge of the Citizen’s Charter and the
+              services offered by the office to improve communication.
+            </p>
+          </div>
+
+          <div class="text-center p-2 md:p-4 relative z-10">
+            <p class="step-number">03</p>
+            <div class="hidden md:block step-connector"></div>
+            <img
+              src="User View/HowitWorks/experience.png"
+              alt="Rate Your Experience Icon"
+              class="w-20 h-20 mx-auto mb-4 object-contain mt-8"
+            />
+            <h4 class="font-bold text-primary-dark mb-2">
+              Rate Your Experience
+            </h4>
+            <p class="text-xs text-gray-600 text-left px-2">
+              Evaluate the quality of service you received using our
+              satisfaction scale. Rate various aspects from staff courtesy to
+              facility cleanliness, processing time, and overall service
+              quality.
+            </p>
+          </div>
+
+          <div class="text-center p-2 md:p-4 relative z-10">
+            <p class="step-number">04</p>
+            <div class="hidden md:block step-connector"></div>
+            <img
+              src="User View/HowitWorks/chatbubble.png"
+              alt="Share Additional Feedback Icon"
+              class="w-20 h-20 mx-auto mb-4 object-contain mt-8"
+            />
+            <h4 class="font-bold text-primary-dark mb-2">
+              Share Additional Feedback
+            </h4>
+            <p class="text-xs text-gray-600 text-left px-2">
+              Provide suggestions for improvement and share your overall
+              experience. Your insights help us identify specific areas where we
+              can serve you better. Submit and receive instant confirmation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- START OF UPDATED FAQS SECTION -->
+    <section id="faqs" class="section-padding max-w-5xl mx-auto">
+      <h2
+        class="text-center text-3xl sm:text-4xl font-extrabold text-primary-dark mb-12"
+      >
+        FAQs
+      </h2>
+
+      <div class="space-y-4" id="faq-container">
+        <div
+          class="faq-item bg-white rounded-lg overflow-hidden shadow-md border border-gray-200"
+        >
+          <button
+            class="faq-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-dark-gray hover:bg-blue-50 transition duration-150"
+          >
+            How do I submit feedback to the local government?
+            <svg
+              class="faq-icon w-6 h-6 text-dark-gray transition duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              ></path>
+            </svg>
+          </button>
+          <div class="faq-content px-4 text-gray-600">
+            <p>
+              Simply click **"Take the Survey"** or **"Get Started"** to begin. You'll
+              be guided through a short form where you can select the service
+              category and provide your feedback. The entire process takes less
+              than 5 minutes.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="faq-item bg-white rounded-lg overflow-hidden shadow-md border border-gray-200"
+        >
+          <button
+            class="faq-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-dark-gray hover:bg-gray-50 transition duration-150"
+          >
+            Is my personal information safe and confidential?
+            <svg
+              class="faq-icon w-6 h-6 text-dark-gray transition duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              ></path>
+            </svg>
+          </button>
+          <div class="faq-content px-4 text-gray-600">
+            <p>
+              Yes, your privacy is our priority. Personal data is encrypted and
+              handled in strict compliance with the Data Privacy Act of 2012 (RA
+              10173). It is used solely for verification and to ensure
+              accountability in the feedback process.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="faq-item bg-white rounded-lg overflow-hidden shadow-md border border-gray-200"
+        >
+          <button
+            class="faq-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-dark-gray hover:bg-gray-50 transition duration-150"
+          >
+            How does my feedback lead to actual improvements?
+            <svg
+              class="faq-icon w-6 h-6 text-dark-gray transition duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              ></path>
+            </svg>
+          </button>
+          <div class="faq-content px-4 text-gray-600">
+            <p>
+              Feedback is routed to the corresponding department, reviewed by
+              data analysts, and aggregated to identify systemic issues and
+              areas for improvement. This data informs policy adjustments and
+              service delivery enhancements.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="faq-item bg-white rounded-lg overflow-hidden shadow-md border border-gray-200"
+        >
+          <button
+            class="faq-toggle w-full flex justify-between items-center p-4 text-left font-semibold text-dark-gray hover:bg-gray-50 transition duration-150"
+          >
+            Can I submit feedback more than once?
+            <svg
+              class="faq-icon w-6 h-6 text-dark-gray transition duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              ></path>
+            </svg>
+          </button>
+          <div class="faq-content px-4 text-gray-600">
+            <p>
+              Yes, citizens are encouraged to submit feedback as often as
+              needed. Each piece of feedback helps the City Government in its
+              commitment to continuous improvement.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- END OF UPDATED FAQS SECTION -->
+
+    <footer class="footer-container">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8 text-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 pb-8">
+            <div class="md:col-span-1">
+              <h5
+                class="text-xl font-extrabold mb-4 flex items-center space-x-3 text-white"
+              >
+                <svg
+                  class="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+                <span>Explore?</span>
+              </h5>
+              <ul class="space-y-2 text-base text-gray-300">
+                <li>
+                  <a href="#" class="hover:text-white transition duration-150"
+                    >Home</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-white transition duration-150"
+                    >About Us</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-white transition duration-150"
+                    >How It Works?</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-white transition duration-150"
+                    >Help</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-white transition duration-150"
+                    >Take the Survey!</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="md:col-span-1 pt-8 md:pt-0">
+              <h5
+                class="text-xl font-extrabold mb-4 flex items-center space-x-3 text-white"
+              >
+                <svg
+                  class="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1"
+                  ></path>
+                </svg>
+                <span>Governance & Policy</span>
+              </h5>
+              <ul class="space-y-2 text-base text-gray-300">
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Annual Reports</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >City Ordinances</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Freedom of Information (FOI)</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Data Privacy Policy (DPA)</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Terms of Service</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="md:col-span-1 pt-8 md:pt-0">
+              <h5
+                class="text-xl font-extrabold mb-4 flex items-center space-x-3 text-white"
+              >
+                <svg
+                  class="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  ></path>
+                </svg>
+                <span>Connect With Us</span>
+              </h5>
+              <ul class="space-y-3 text-base text-gray-300">
+                <li class="flex items-start space-x-3">
+                  <svg
+                    class="w-6 h-6 mt-0.5 flex-shrink-0 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    ></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    ></path>
+                  </svg>
+                  <span class="text-gray-300"
+                    >City Hall, Maysan Road, <br />Valenzuela City,
+                    Philippines</span
+                  >
+                </li>
+                <li class="flex items-center space-x-3">
+                  <svg
+                    class="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    ></path>
+                  </svg>
+                  <span class="text-gray-300">(02) 8352-1000</span>
+                </li>
+                <li class="flex items-center space-x-3">
+                  <svg
+                    class="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-2 4v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7"
+                    ></path>
+                  </svg>
+                  <span class="text-gray-300"
+                    >ictosupport@valenzuela.gov.ph</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 text-center border-t border-gray-600">
+          <p class="text-sm text-gray-300">
+            &copy; City Government of Valenzuela. All rights reserved 2025
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- REPLACED JAVASCRIPT FOR ACCORDION FUNCTIONALITY (Full help.html logic) -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const faqItems = document.querySelectorAll(".faq-item");
+
+        // The central function to control opening and closing state
+        const setIcon = (item, isOpen) => {
+          const content = item.querySelector(".faq-content");
+          
+          if (isOpen) {
+            item.classList.add("active");
+            item.classList.remove("initial-active"); 
+            
+            // Allow height calculation, then set
+            content.style.maxHeight = 'none';
+            const height = content.scrollHeight;
+            content.style.maxHeight = height + "px";
+          } else {
+            // Only collapse if it's currently active (either initial or standard)
+            if (item.classList.contains('active') || item.classList.contains('initial-active')) {
+              // Set to current scroll height before collapsing to 0 for smooth transition
+              content.style.maxHeight = content.scrollHeight + "px";
+              
+              setTimeout(() => {
+                item.classList.remove("active");
+                item.classList.remove("initial-active");
+                content.style.maxHeight = "0";
+              }, 10);
+            }
+          }
+        };
+
+
+        // 1. Initial Processing (Handles the resize and initial state logic)
+        faqItems.forEach((item) => {
+          if (item.classList.contains('initial-active')) {
+            // Ensure initial-active items are visibly open on load
+            item.classList.add('active'); 
+            const content = item.querySelector(".faq-content");
+            content.style.maxHeight = 'none';
+            const height = content.scrollHeight;
+            content.style.maxHeight = height + 'px';
+          }
+          
+          // Re-adjust max-height if the window is resized while an FAQ is open
+          window.addEventListener("resize", () => {
+            if (item.classList.contains("active")) {
+              const content = item.querySelector(".faq-content");
+              content.style.maxHeight = "none";
+              const height = content.scrollHeight;
+              content.style.maxHeight = height + "px";
+            }
+          });
+          
+        });
+
+
+        // 2. Event Listener setup
+        faqItems.forEach((item) => {
+          const toggle = item.querySelector(".faq-toggle");
+
+          toggle.addEventListener("click", () => {
+            const isExpanded = item.classList.contains("active");
+
+            // Close all other open FAQs (Accordion behavior)
+            document
+              .querySelectorAll(".faq-item.active")
+              .forEach((openItem) => {
+                if (openItem !== item) {
+                  setIcon(openItem, false); // Manually collapse other items
+                }
+              });
+
+            // Toggle the clicked FAQ
+            if (isExpanded) {
+              setIcon(item, false); // Collapse it
+            } else {
+              setIcon(item, true); // Expand it
+            }
+          });
+        });
+
+      });
+    </script>
+  </body>
+</html>

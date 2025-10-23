@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Us - Valenzuelife</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary-dark": "#163973", // Original Main blue color (Navy)
+              "brand-blue": "#2563EB", // A standard blue for accents/buttons
+              "dark-gray": "#374151", // Dark text color
+              "light-bg": "#F9FAFB", // Light background for the body sections
+            },
+          },
+        },
+      };
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Custom styles copied from index.html */
+      .header-bg {
+        background-color: #163973;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        color: #374151;
+        background-color: #f9fafb;
+      }
+      .section-padding {
+        /* Default padding for subsequent sections */
+        padding-top: 3rem; 
+        padding-bottom: 3rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      @media (min-width: 640px) {
+        .section-padding {
+          padding-left: 4rem;
+          padding-right: 4rem;
+        }
+      }
+      @media (min-width: 1024px) {
+        .section-padding {
+          padding-left: 8rem;
+          padding-right: 8rem;
+        }
+      }
+
+      /* Custom underline for the active Nav link (ABOUT US) */
+      .nav-link.active {
+        border-bottom: 2px solid white;
+        padding-bottom: 4px;
+      }
+
+      /* --- FOOTER ARC DESIGN --- */
+      .footer-container {
+        background-color: #163973; /* Matches primary-dark */
+        color: white;
+        position: relative;
+      }
+      /* Hide the arc on small screens where the curve doesn't look good */
+      @media (max-width: 767px) {
+        .footer-container::before {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="antialiased text-dark-gray">
+    <header class="header-bg sticky top-0 z-50 shadow-lg">
+      <nav
+        class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8"
+      >
+        <div class="flex items-center space-x-4">
+          <img
+            src="User View/Nav/valenzuealife.png"
+            alt="Valenzuela City Seal"
+            class="h-20 w-20 object-contain"
+          />
+          <img
+            src="User View/Nav/text.png"
+            alt="Valenzuelife Text Logo"
+            class="h-10 object-contain hidden sm:block"
+          />
+        </div>
+
+        <div class="flex-grow flex justify-center hidden md:flex">
+          <div
+            class="flex space-x-10 text-white text-sm font-bold tracking-widest"
+          >
+            <a
+              href="index.html"
+              class="nav-link hover:text-blue-300 transition duration-150"
+              >HOME</a
+            >
+            <a
+              href="about.html"
+              class="nav-link active hover:text-blue-300 transition duration-150"
+              >ABOUT US</a
+            >
+            <a
+              href="howitworks.html"
+              class="nav-link hover:text-blue-300 transition duration-150"
+              >HOW IT WORKS</a
+            >
+            <a
+              href="help.html"
+              class="nav-link hover:text-blue-300 transition duration-150"
+              >HELP</a
+            >
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-4 flex-shrink-0">
+          <a
+            href="#"
+            class="bg-white text-primary-dark font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:bg-gray-200 transition duration-150"
+          >
+            Take the Survey
+          </a>
+          <button
+            class="text-white hover:text-blue-300 transition duration-150"
+          >
+            <img
+              src="User View/Nav/adminlogin.png"
+              alt="Admin Login Shield"
+              class="h-7 w-7 object-contain"
+            />
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section 
+        id="about-us-content" 
+        class="max-w-7xl mx-auto flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8"
+        style="min-height: calc(100vh - 64px);"
+      >
+        <h2
+          class="text-center text-3xl sm:text-4xl font-extrabold text-primary-dark pt-12 mb-12"
+        >
+          Our Story
+        </h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center w-full">
+          <div class="order-2 lg:order-1 flex justify-center">
+            <img
+              src="User View/User Home/aboutus.png"
+              alt="Empowering Citizens Illustration"
+              class="max-w-full h-auto"
+            />
+          </div>
+
+          <div class="order-1 lg:order-2">
+            <h3 class="text-2xl font-bold text-dark-gray mb-4">
+              Empowering Citizens, Improving Services.
+            </h3>
+            <p class="text-gray-600 leading-relaxed text-lg">
+              The ARTA CSS System connects you directly with local government.
+              We're committed to transparency, accountability, and continuous
+              improvement. Your feedback drives real change in our
+              community—from infrastructure improvements to better public
+              services. Every voice counts in shaping the future of Valenzuela.
+            </p>
+          </div>
+        </div>
+
+        </section>
+
+      <section class="section-padding max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div class="p-6">
+            <img
+              src="User View/User Home/quicksimple.png"
+              alt="Quick & Simple Icon"
+              class="w-16 h-16 mx-auto mb-4 object-contain"
+            />
+            <h4 class="text-lg font-bold text-primary-dark mb-2">
+              Quick & Simple
+            </h4>
+            <p class="text-sm text-gray-600">
+              Submit feedback in minutes through our easy-to-use platform. No
+              complicated forms or lengthy processes—just straightforward
+              communication with your local government.
+            </p>
+          </div>
+
+          <div class="p-6">
+            <img
+              src="User View/User Home/transparentaccountable.png"
+              alt="Transparent & Accountable Icon"
+              class="w-16 h-16 mx-auto mb-4 object-contain"
+            />
+            <h4 class="text-lg font-bold text-primary-dark mb-2">
+              Transparent & Accountable
+            </h4>
+            <p class="text-sm text-gray-600">
+              We value transparency and ensure that your feedback reaches the
+              right departments. Each submission is properly documented and helps
+              us monitor progress on service delivery and improvement
+              initiatives.
+            </p>
+          </div>
+
+          <div class="p-6">
+            <img
+              src="User View/User Home/continuousimprovement.png"
+              alt="Continuous Improvement Icon"
+              class="w-16 h-16 mx-auto mb-4 object-contain"
+            />
+            <h4 class="text-lg font-bold text-primary-dark mb-2">
+              Continuous Improvement
+            </h4>
+            <p class="text-sm text-gray-600">
+              Your voice fuels change. Feedback gathered through this system is
+              analyzed and used to develop better policies, streamline processes,
+              and deliver high-quality public services that meet community needs.
+            </p>
+          </div>
+        </div>
+      </section>
+      
+      <section class="section-padding max-w-7xl mx-auto">
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 gap-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100"
+        >
+          <div class="text-center">
+            <h3 class="text-3xl font-extrabold text-primary-dark mb-4">
+              Our Mission
+            </h3>
+            <p class="text-lg text-gray-700 leading-relaxed text-left md:text-center">
+              To promote participatory governance by providing a fast, reliable,
+              and accessible platform for citizens to communicate with their
+              local government. We aim to strengthen trust, ensure
+              accountability, and encourage collaboration toward better service
+              delivery.
+            </p>
+          </div>
+          <div class="text-center">
+            <h3 class="text-3xl font-extrabold text-primary-dark mb-4">
+              Our Vision
+            </h3>
+            <p class="text-lg text-gray-700 leading-relaxed text-left md:text-center">
+              A responsive and transparent city government that listens to its
+              people and values their voices, where citizen participation drives
+              continuous progress and where every Valenzuelano feels heard,
+              valued, and empowered.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer-container">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8 text-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 pb-8">
+            <div class="md:col-span-1">
+              <h5
+                class="text-xl font-extrabold mb-4 flex items-center space-x-3 text-white"
+              >
+                <svg
+                  class="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+                <span>Explore?</span>
+              </h5>
+              <ul class="space-y-2 text-base text-gray-300">
+                <li>
+                  <a href="index.html" class="hover:text-white transition duration-150"
+                    >Home</a
+                  >
+                </li>
+                <li>
+                  <a href="about.html" class="hover:text-white transition duration-150"
+                    >About Us</a
+                  >
+                </li>
+                <li>
+                  <a href="index.html#how-it-works" class="hover:text-white transition duration-150"
+                    >How It Works?</a
+                  >
+                </li>
+                <li>
+                  <a href="index.html#faqs" class="hover:text-white transition duration-150"
+                    >Help</a
+                  >
+                </li>
+                <li>
+                  <a href="#" class="hover:text-white transition duration-150"
+                    >Take the Survey!</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="md:col-span-1 pt-8 md:pt-0">
+              <h5
+                class="text-xl font-extrabold mb-4 flex items-center space-x-3 text-white"
+              >
+                <svg
+                  class="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1"
+                  ></path>
+                </svg>
+                <span>Governance & Policy</span>
+              </h5>
+              <ul class="space-y-2 text-base text-gray-300">
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Annual Reports</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >City Ordinances</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Freedom of Information (FOI)</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Data Privacy Policy (DPA)</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-white transition duration-150 whitespace-nowrap"
+                    >Terms of Service</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div class="md:col-span-1 pt-8 md:pt-0">
+              <h5
+                class="text-xl font-extrabold mb-4 flex items-center space-x-3 text-white"
+              >
+                <svg
+                  class="w-7 h-7"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  ></path>
+                </svg>
+                <span>Connect With Us</span>
+              </h5>
+              <ul class="space-y-3 text-base text-gray-300">
+                <li class="flex items-start space-x-3">
+                  <svg
+                    class="w-6 h-6 mt-0.5 flex-shrink-0 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    ></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    ></path>
+                  </svg>
+                  <span class="text-gray-300"
+                    >City Hall, Maysan Road, <br />Valenzuela City,
+                    Philippines</span
+                  >
+                </li>
+                <li class="flex items-center space-x-3">
+                  <svg
+                    class="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    ></path>
+                  </svg>
+                  <span class="text-gray-300">(02) 8352-1000</span>
+                </li>
+                <li class="flex items-center space-x-3">
+                  <svg
+                    class="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-2 4v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7"
+                    ></path>
+                  </svg>
+                  <span class="text-gray-300"
+                    >ictosupport@valenzuela.gov.ph</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 text-center border-t border-gray-600">
+          <p class="text-sm text-gray-300">
+            &copy; City Government of Valenzuela. All rights reserved 2025
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
