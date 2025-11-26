@@ -6,16 +6,17 @@
     <title>About Us - Valenzuelife</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="script.js"></script>
 
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              "primary-dark": "#163973", // Original Main blue color (Navy)
-              "brand-blue": "#2563EB", // A standard blue for accents/buttons
-              "dark-gray": "#374151", // Dark text color
-              "light-bg": "#F9FAFB", // Light background for the body sections
+              "primary-dark": "#163973",
+              "brand-blue": "#2563EB",
+              "dark-gray": "#374151",
+              "light-bg": "#F9FAFB",
             },
           },
         },
@@ -26,56 +27,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
-
-    <style>
-      /* Custom styles copied from index.html */
-      .header-bg {
-        background-color: #163973;
-      }
-      body {
-        font-family: "Inter", sans-serif;
-        color: #374151;
-        background-color: #f9fafb;
-      }
-      .section-padding {
-        /* Default padding for subsequent sections */
-        padding-top: 3rem; 
-        padding-bottom: 3rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-      @media (min-width: 640px) {
-        .section-padding {
-          padding-left: 4rem;
-          padding-right: 4rem;
-        }
-      }
-      @media (min-width: 1024px) {
-        .section-padding {
-          padding-left: 8rem;
-          padding-right: 8rem;
-        }
-      }
-
-      /* Custom underline for the active Nav link (ABOUT US) */
-      .nav-link.active {
-        border-bottom: 2px solid white;
-        padding-bottom: 4px;
-      }
-
-      /* --- FOOTER ARC DESIGN --- */
-      .footer-container {
-        background-color: #163973; /* Matches primary-dark */
-        color: white;
-        position: relative;
-      }
-      /* Hide the arc on small screens where the curve doesn't look good */
-      @media (max-width: 767px) {
-        .footer-container::before {
-          display: none;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body class="antialiased text-dark-gray">
     <header class="header-bg sticky top-0 z-50 shadow-lg">
@@ -124,7 +76,7 @@
 
         <div class="flex items-center space-x-4 flex-shrink-0">
           <a
-            href="#"
+            href="survey.html"
             class="bg-white text-primary-dark font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:bg-gray-200 transition duration-150"
           >
             Take the Survey
@@ -175,8 +127,7 @@
             </p>
           </div>
         </div>
-
-        </section>
+      </section>
 
       <section class="section-padding max-w-7xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
@@ -299,8 +250,8 @@
                   >
                 </li>
                 <li>
-                  <a href="index.html#how-it-works" class="hover:text-white transition duration-150"
-                    >How It Works?</a
+                  <a href="howitworks.html" class="hover:text-white transition duration-150"
+                    >How It Works</a
                   >
                 </li>
                 <li>
@@ -309,7 +260,7 @@
                   >
                 </li>
                 <li>
-                  <a href="#" class="hover:text-white transition duration-150"
+                  <a href="survey.html" class="hover:text-white transition duration-150"
                     >Take the Survey!</a
                   >
                 </li>
@@ -338,39 +289,14 @@
               </h5>
               <ul class="space-y-2 text-base text-gray-300">
                 <li>
-                  <a
-                    href="#"
-                    class="hover:text-white transition duration-150 whitespace-nowrap"
-                    >Annual Reports</a
-                  >
+                  <button onclick="showModal('data-privacy-modal')" class="hover:text-white transition duration-150 whitespace-nowrap text-left">
+                    Data Privacy Act
+                  </button>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    class="hover:text-white transition duration-150 whitespace-nowrap"
-                    >City Ordinances</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="hover:text-white transition duration-150 whitespace-nowrap"
-                    >Freedom of Information (FOI)</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="hover:text-white transition duration-150 whitespace-nowrap"
-                    >Data Privacy Policy (DPA)</a
-                  >
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    class="hover:text-white transition duration-150 whitespace-nowrap"
-                    >Terms of Service</a
-                  >
+                  <button onclick="showModal('terms-of-service-modal')" class="hover:text-white transition duration-150 whitespace-nowrap text-left">
+                    Terms of Service
+                  </button>
                 </li>
               </ul>
             </div>
@@ -470,5 +396,57 @@
         </div>
       </div>
     </footer>
+
+    <!-- Data Privacy Act Modal -->
+    <div id="data-privacy-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-content bg-white rounded-lg shadow-lg max-w-2xl">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+          <h2 class="text-2xl font-extrabold text-primary-dark">Data Privacy Act</h2>
+          <button onclick="closeModal('data-privacy-modal')" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <div class="p-6 text-gray-700 max-h-96 overflow-y-auto">
+          <h3 class="text-lg font-semibold mb-4">Republic Act No. 10173 - Data Privacy Act of 2012</h3>
+          <p class="mb-4">This is the primary data privacy law in the Philippines. It aims to protect the fundamental human right to privacy of information while ensuring free flow of information.</p>
+          <h4 class="font-semibold mt-4 mb-2">Key Provisions:</h4>
+          <ul class="list-disc list-inside space-y-2 mb-4">
+            <li>Personal information must be processed lawfully and fairly</li>
+            <li>Data subjects have rights to access, rectify, and erase their personal data</li>
+            <li>Organizations must implement reasonable and appropriate security measures</li>
+            <li>Unauthorized processing of personal information is prohibited</li>
+            <li>Data breaches must be reported to the National Privacy Commission</li>
+          </ul>
+          <p class="mb-4">All feedback submitted through this system is protected under RA 10173 and is handled with utmost confidentiality.</p>
+        </div>
+        <div class="p-6 border-t border-gray-200 text-right">
+          <button onclick="closeModal('data-privacy-modal')" class="bg-primary-dark text-white px-6 py-2 rounded-lg hover:bg-opacity-90">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms of Service Modal -->
+    <div id="terms-of-service-modal" class="modal-backdrop" style="display: none;">
+      <div class="modal-content bg-white rounded-lg shadow-lg max-w-2xl">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+          <h2 class="text-2xl font-extrabold text-primary-dark">Terms of Service</h2>
+          <button onclick="closeModal('terms-of-service-modal')" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+        <div class="p-6 text-gray-700 max-h-96 overflow-y-auto">
+          <h3 class="text-lg font-semibold mb-4">Terms and Conditions</h3>
+          <h4 class="font-semibold mt-4 mb-2">1. Acceptance of Terms</h4>
+          <p class="mb-4">By using this feedback system, you agree to comply with these terms and conditions and all applicable laws and regulations.</p>
+          <h4 class="font-semibold mt-4 mb-2">2. User Responsibilities</h4>
+          <p class="mb-4">Users agree to provide accurate and truthful information. Abuse of the system, including false reports or harassment, is strictly prohibited.</p>
+          <h4 class="font-semibold mt-4 mb-2">3. Intellectual Property</h4>
+          <p class="mb-4">All content provided by the City Government of Valenzuela is protected by copyright. Unauthorized reproduction is prohibited.</p>
+          <h4 class="font-semibold mt-4 mb-2">4. Limitation of Liability</h4>
+          <p class="mb-4">The City Government is not liable for any indirect, incidental, or consequential damages arising from the use of this system.</p>
+          <h4 class="font-semibold mt-4 mb-2">5. Modifications</h4>
+          <p class="mb-4">These terms may be modified at any time. Continued use of the system constitutes acceptance of any changes.</p>
+        </div>
+        <div class="p-6 border-t border-gray-200 text-right">
+          <button onclick="closeModal('terms-of-service-modal')" class="bg-primary-dark text-white px-6 py-2 rounded-lg hover:bg-opacity-90">Close</button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
