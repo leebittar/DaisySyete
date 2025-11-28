@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    SHARED JAVASCRIPT FOR DAISYSYETE PROJECT
    ========================================================================== */
@@ -146,10 +147,9 @@ function renderSQDQuestions() {
 
   let html = '';
   sqdQuestions.forEach((qText, index) => {
-    const qId = `SQD${index}`;
+     const qId = `sqd${index}`;
     html += `
       <div class="form-section p-4 rounded-lg">
-        <p class="text-sm font-semibold mb-3">${qText} <span class="text-red-500">*</span></p>
         <div class="mood-grid">
     `;
     moods.forEach(mood => {
@@ -514,4 +514,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-

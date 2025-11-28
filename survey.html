@@ -299,6 +299,102 @@
             <button type="button" onclick="goToHome()" class="success-btn font-bold py-3 px-8 rounded-lg hover:opacity-90 transition duration-300">Survey Completed Successfully!</button>
             <p class="text-xs text-gray-500 mt-4">You will be redirected to the home page shortly.</p>
         </div>
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script type="module">
+        /**
+         * Survey.html Main Module
+         * Integrates Firebase backend with survey form handling
+         */
+        
+        import { initializeSurveyHandlers, validateFormAndProceed, showConfirmationBeforeSubmit, handleCC1Change } from './survey-submission.js';
+
+        // Initialize survey handlers on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSurveyHandlers();
+
+            // Show form 1 by default
+            document.getElementById('form-1').classList.remove('hidden');
+            updateProgressBar();
+        });
+
+        // Global functions for HTML onclick handlers
+        window.validateForm = function(formNumber) {
+            if (formNumber === 4) {
+                // Final submission - show confirmation modal
+                showConfirmationBeforeSubmit();
+            } else {
+                // Validate and proceed to next form
+                validateFormAndProceed(formNumber);
+            }
+        };
+
+        window.proceedToSurvey = function() {
+            // Handler for privacy notice acceptance
+            const privacyModal = document.getElementById('data-privacy-modal');
+            if (privacyModal) {
+                privacyModal.style.display = 'none';
+            }
+            // Initialize first form
+            document.getElementById('form-1').classList.remove('hidden');
+            updateProgressBar();
+        };
+
+        window.completeSurvey = async function() {
+            // Handler for final survey submission after confirmation
+            const submitConfirmModal = document.getElementById('submit-confirm-modal');
+            if (submitConfirmModal) {
+                submitConfirmModal.style.display = 'none';
+            }
+            
+            // Import and call submit function
+            const { submitSurvey } = await import('./survey-submission.js');
+            await submitSurvey();
+        };
+
+        window.goToHome = function() {
+            window.location.href = '/index.html';
+        };
+
+        window.showModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        };
+
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        window.handleCC1Change = handleCC1Change;
+
+        // Progress bar updater
+        function updateProgressBar() {
+            const forms = document.querySelectorAll('.survey-form');
+            let completedForms = 0;
+
+            forms.forEach((form, index) => {
+                if (!form.classList.contains('hidden')) {
+                    completedForms = index;
+                }
+            });
+
+            const progress = ((completedForms + 1) / forms.length) * 100;
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+
+            if (progressText) {
+                progressText.textContent = `${Math.round(progress)}% Complete`;
+            }
+        }
+    </script>
+
 </body>
 </html>
