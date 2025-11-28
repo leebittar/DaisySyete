@@ -285,6 +285,19 @@ export function showFieldError(fieldName, errorMsg) {
     errorElement.textContent = errorMsg;
     errorElement.classList.remove('hidden');
   }
+
+  // Add red border to input fields
+  const inputElement = document.querySelector(`[name="${fieldName}"]`);
+  if (inputElement) {
+    inputElement.style.borderColor = '#ef4444';
+    inputElement.style.borderWidth = '2px';
+  }
+
+  // Add red border to form sections (for Form 3 SQD fields)
+  const formSection = document.getElementById(`${fieldName}-container`);
+  if (formSection) {
+    formSection.classList.add('error');
+  }
 }
 
 /**
@@ -297,6 +310,19 @@ export function clearFieldError(fieldName) {
   if (errorElement) {
     errorElement.textContent = '';
     errorElement.classList.add('hidden');
+  }
+
+  // Remove red border from input fields
+  const inputElement = document.querySelector(`[name="${fieldName}"]`);
+  if (inputElement) {
+    inputElement.style.borderColor = '';
+    inputElement.style.borderWidth = '';
+  }
+
+  // Remove red border from form sections
+  const formSection = document.getElementById(`${fieldName}-container`);
+  if (formSection) {
+    formSection.classList.remove('error');
   }
 }
 

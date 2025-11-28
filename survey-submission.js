@@ -307,6 +307,25 @@ export async function submitSurvey() {
   const form4Data = collectFormData('form-4');
   surveyState.formData.form4 = form4Data;
 
+  // Validate form 4 before submission
+  const { valid: isForm4Valid, errors: form4Errors } = validateForm(form4Data, ['suggestions', 'email']);
+  
+  if (!isForm4Valid) {
+    // Show all validation errors
+    Object.entries(form4Errors).forEach(([fieldName, errorMsg]) => {
+      showFieldError(fieldName, errorMsg);
+    });
+
+    // Scroll to first error field
+    const firstErrorFieldName = Object.keys(form4Errors)[0];
+    const firstErrorField = document.querySelector(`[name="${firstErrorFieldName}"]`);
+    if (firstErrorField) {
+      firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    return; // Don't proceed with submission
+  }
+
   try {
     surveyState.isSubmitting = true;
 
