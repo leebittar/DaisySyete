@@ -1,3 +1,4 @@
+
 /* ==========================================================================
    SHARED JAVASCRIPT FOR DAISYSYETE PROJECT
    ========================================================================== */
@@ -28,25 +29,42 @@ const firebaseConfig = typeof __firebase_config !== "undefined"
 function initFaqAccordion() {
   const faqItems = document.querySelectorAll(".faq-item");
 
-  const setIcon = (item, isOpen) => {
+  const setContentHeight = (item, isOpen) => {
     const content = item.querySelector(".faq-content");
     
+    if (!content) return;
+    
     if (isOpen) {
-      item.classList.add("active");
-      item.classList.remove("initial-active");
-      
+      // Force the content to be visible temporarily to measure
       content.style.maxHeight = 'none';
+      content.style.overflow = 'visible';
+      
+      // Get the full height including all child content
       const height = content.scrollHeight;
-      content.style.maxHeight = height + "px";
+      
+      // Add extra padding buffer to ensure all content is visible
+      const paddingBuffer = 20; // Extra buffer for margins
+      const totalHeight = height + paddingBuffer;
+      
+      // Set the max-height with buffer
+      content.style.maxHeight = totalHeight + "px";
+      
+      // Recalculate on resize
+      const resizeHandler = () => {
+        if (item.classList.contains('active')) {
+          content.style.maxHeight = 'none';
+          const newHeight = content.scrollHeight;
+          content.style.maxHeight = (newHeight + paddingBuffer) + "px";
+        }
+      };
+      window.addEventListener("resize", resizeHandler);
+      item.resizeHandler = resizeHandler;
     } else {
-      if (item.classList.contains('active') || item.classList.contains('initial-active')) {
-        content.style.maxHeight = content.scrollHeight + "px";
-        
-        setTimeout(() => {
-          item.classList.remove("active");
-          item.classList.remove("initial-active");
-          content.style.maxHeight = "0";
-        }, 10);
+      content.style.maxHeight = "0";
+      content.style.overflow = 'hidden';
+      // Remove resize listener
+      if (item.resizeHandler) {
+        window.removeEventListener("resize", item.resizeHandler);
       }
     }
   };
@@ -60,38 +78,29 @@ function initFaqAccordion() {
       const height = content.scrollHeight;
       content.style.maxHeight = height + 'px';
     }
-    
-    window.addEventListener("resize", () => {
-      if (item.classList.contains("active")) {
-        const content = item.querySelector(".faq-content");
-        content.style.maxHeight = "none";
-        const height = content.scrollHeight;
-        content.style.maxHeight = height + "px";
-      }
-    });
   });
 
-  // Event Listener setup
+  // Event Listener setup - Allow multiple FAQs to be open
   faqItems.forEach((item) => {
     const toggle = item.querySelector(".faq-toggle");
 
-    toggle.addEventListener("click", () => {
-      const isExpanded = item.classList.contains("active");
+    if (toggle) {
+      toggle.addEventListener("click", () => {
+        const isExpanded = item.classList.contains("active");
 
-      document
-        .querySelectorAll(".faq-item.active")
-        .forEach((openItem) => {
-          if (openItem !== item) {
-            setIcon(openItem, false);
-          }
-        });
-
-      if (isExpanded) {
-        setIcon(item, false);
-      } else {
-        setIcon(item, true);
-      }
-    });
+        if (isExpanded) {
+          // Close this FAQ
+          item.classList.remove("active");
+          item.classList.remove("initial-active");
+          setContentHeight(item, false);
+        } else {
+          // Open this FAQ (don't close others)
+          item.classList.add("active");
+          item.classList.remove("initial-active");
+          setContentHeight(item, true);
+        }
+      });
+    }
   });
 }
 
@@ -136,19 +145,20 @@ function renderSQDQuestions() {
     style.textContent = `
       .mood-grid { display: flex; justify-content: space-between; gap: 0.5rem; }
       .mood-option { display: flex; flex-direction: column; align-items: center; width: 84px; }
-      .mood-icon { display: flex; align-items: center; justify-content: center; height: 56px; width: 56px; border-radius: 9999px; cursor: pointer; }
+      .mood-icon { display: flex; align-items: center; justify-content: center; height: 56px; width: 56px; border-radius: 9999px; cursor: pointer; transition: all 0.3s ease; }
       .mood-icon img { max-width: 48px; max-height: 48px; display: block; }
       .mood-label { min-height: 40px; text-align: center; font-size: 12px; margin-top: 6px; line-height: 1.1; white-space: normal; }
-      .mood-icon.selected { outline: 2px solid rgba(37,99,235,0.15); box-shadow: 0 4px 10px rgba(37,99,235,0.08); }
+      .mood-icon.selected { outline: 2px solid #2563eb; box-shadow: 0 0 15px rgba(37,99,235,0.6), 0 4px 10px rgba(37,99,235,0.3); background-color: rgba(37,99,235,0.1); }
+      .form-section.error { border: 2px solid #ef4444; }
     `;
     document.head.appendChild(style);
   }
 
   let html = '';
   sqdQuestions.forEach((qText, index) => {
-    const qId = `SQD${index}`;
+     const qId = `sqd${index}`;
     html += `
-      <div class="form-section p-4 rounded-lg">
+      <div class="form-section p-4 rounded-lg" id="${qId}-container">
         <p class="text-sm font-semibold mb-3">${qText} <span class="text-red-500">*</span></p>
         <div class="mood-grid">
     `;
@@ -167,6 +177,7 @@ function renderSQDQuestions() {
     });
     html += `
         </div>
+        <p id="${qId}-error" class="text-red-500 text-xs mt-3 hidden"></p>
       </div>
     `;
   });
@@ -179,6 +190,14 @@ function renderSQDQuestions() {
     });
     labelElement.classList.add('selected');
     labelElement.previousElementSibling.checked = true;
+    
+    // Remove error styling when a valid selection is made
+    container.classList.remove('error');
+    const errorElement = document.getElementById(`${qName}-error`);
+    if (errorElement) {
+      errorElement.classList.add('hidden');
+    }
+    
     saveFormState(3);
   };
 }
@@ -514,4 +533,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-

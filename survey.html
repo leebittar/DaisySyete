@@ -66,10 +66,12 @@
                             <option value="business">Business</option>
                             <option value="government">Government</option>
                         </select>
+                        <p id="clientType-error" class="text-red-500 text-xs mt-1 hidden"></p>
                     </label>
                     <label class="block">
                         <span class="text-gray-700">Date <span class="text-red-500">*</span></span>
                         <input type="date" name="date" value="2025-10-12" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        <p id="date-error" class="text-red-500 text-xs mt-1 hidden"></p>
                     </label>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -81,12 +83,14 @@
                     <label class="block">
                         <span class="text-gray-700">Service Availed <span class="text-red-500">*</span></span>
                         <input type="text" name="serviceAvailed" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        <p id="serviceAvailed-error" class="text-red-500 text-xs mt-1 hidden"></p>
                     </label>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label class="block">
                         <span class="text-gray-700">Region of Residence <span class="text-red-500">*</span></span>
                         <input type="text" name="regionOfResidence" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        <p id="regionOfResidence-error" class="text-red-500 text-xs mt-1 hidden"></p>
                     </label>
                     <div class="block">
                         <span class="text-gray-700">Sex <span class="text-red-500">*</span></span>
@@ -95,6 +99,7 @@
                             <label class="inline-flex items-center"><input type="radio" name="sex" value="Female" class="form-radio text-blue-600"><span class="ml-2">Female</span></label>
                             <label class="inline-flex items-center"><input type="radio" name="sex" value="Others" class="form-radio text-blue-600"><span class="ml-2">Others</span></label>
                         </div>
+                        <p id="sex-error" class="text-red-500 text-xs mt-1 hidden"></p>
                     </div>
                 </div>
             </div>
@@ -127,6 +132,7 @@
                         <label class="flex items-center"><input type="radio" name="cc1" value="4" id="cc1-unaware-not-saw" class="form-radio text-blue-600 cc1-input" onchange="handleCC1Change(this.value)"><span class="ml-2">I do not know what a CC is and did not see one in this office.</span></label>
                         <p class="text-xs ml-6 italic text-gray-500">(Answer N/A on CC2 and CC3)</p>
                     </div>
+                    <p id="cc1-error" class="text-red-500 text-xs mt-3 hidden"></p>
                 </div>
 
                 <div class="form-section p-5 rounded-lg">
@@ -138,6 +144,7 @@
                         <label class="flex items-center"><input type="radio" name="cc2" value="Not visible at all" id="cc2-not-visible" class="form-radio text-blue-600"><span class="ml-2">Not visible at all</span></label>
                         <label class="flex items-center"><input type="radio" name="cc2" value="Not Applicable" id="cc2-na" class="form-radio text-blue-600"><span class="ml-2">Not Applicable</span></label>
                     </div>
+                    <p id="cc2-error" class="text-red-500 text-xs mt-3 hidden"></p>
                 </div>
 
                 <div class="form-section p-5 rounded-lg">
@@ -148,6 +155,7 @@
                         <label class="flex items-center"><input type="radio" name="cc3" value="Did not help" id="cc3-did-not-help" class="form-radio text-blue-600"><span class="ml-2">Did not help</span></label>
                         <label class="flex items-center"><input type="radio" name="cc3" value="Not Applicable" id="cc3-na" class="form-radio text-blue-600"><span class="ml-2">Not Applicable</span></label>
                     </div>
+                    <p id="cc3-error" class="text-red-500 text-xs mt-3 hidden"></p>
                 </div>
             </div>
             
@@ -191,11 +199,12 @@
                 <label class="block">
                     <span class="text-gray-700">Suggestions on how we can further improve our services (optional):</span>
                     <textarea name="suggestions" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"></textarea>
+                    <p id="suggestions-error" class="text-red-500 text-xs mt-1 hidden"></p>
                 </label>
                 <label class="block">
                     <span class="text-gray-700">Email Address(optional):</span>
                     <input type="email" name="email" id="email-input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2">
-                    <p id="email-error" class="text-red-500 text-xs mt-1 hidden">Please enter a valid email address (must contain @).</p>
+                    <p id="email-error" class="text-red-500 text-xs mt-1 hidden"></p>
                 </label>
             </div>
 
@@ -299,6 +308,102 @@
             <button type="button" onclick="goToHome()" class="success-btn font-bold py-3 px-8 rounded-lg hover:opacity-90 transition duration-300">Survey Completed Successfully!</button>
             <p class="text-xs text-gray-500 mt-4">You will be redirected to the home page shortly.</p>
         </div>
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script type="module">
+        /**
+         * Survey.html Main Module
+         * Integrates Firebase backend with survey form handling
+         */
+        
+        import { initializeSurveyHandlers, validateFormAndProceed, showConfirmationBeforeSubmit, handleCC1Change } from './survey-submission.js';
+
+        // Initialize survey handlers on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSurveyHandlers();
+
+            // Show form 1 by default
+            document.getElementById('form-1').classList.remove('hidden');
+            updateProgressBar();
+        });
+
+        // Global functions for HTML onclick handlers
+        window.validateForm = function(formNumber) {
+            if (formNumber === 4) {
+                // Final submission - show confirmation modal
+                showConfirmationBeforeSubmit();
+            } else {
+                // Validate and proceed to next form
+                validateFormAndProceed(formNumber);
+            }
+        };
+
+        window.proceedToSurvey = function() {
+            // Handler for privacy notice acceptance
+            const privacyModal = document.getElementById('data-privacy-modal');
+            if (privacyModal) {
+                privacyModal.style.display = 'none';
+            }
+            // Initialize first form
+            document.getElementById('form-1').classList.remove('hidden');
+            updateProgressBar();
+        };
+
+        window.completeSurvey = async function() {
+            // Handler for final survey submission after confirmation
+            const submitConfirmModal = document.getElementById('submit-confirm-modal');
+            if (submitConfirmModal) {
+                submitConfirmModal.style.display = 'none';
+            }
+            
+            // Import and call submit function
+            const { submitSurvey } = await import('./survey-submission.js');
+            await submitSurvey();
+        };
+
+        window.goToHome = function() {
+            window.location.href = '/index.html';
+        };
+
+        window.showModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        };
+
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        window.handleCC1Change = handleCC1Change;
+
+        // Progress bar updater
+        function updateProgressBar() {
+            const forms = document.querySelectorAll('.survey-form');
+            let completedForms = 0;
+
+            forms.forEach((form, index) => {
+                if (!form.classList.contains('hidden')) {
+                    completedForms = index;
+                }
+            });
+
+            const progress = ((completedForms + 1) / forms.length) * 100;
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+
+            if (progressText) {
+                progressText.textContent = `${Math.round(progress)}% Complete`;
+            }
+        }
+    </script>
+
 </body>
 </html>
