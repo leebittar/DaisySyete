@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTA CSS Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the dark sidebar and content area */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        @media (max-width: 768px) {
+            #sidebar {
+                position: fixed;
+                z-index: 50;
+                height: 100%;
+                transform: translateX(-100%);
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+        }
+        /* Custom scrollbar for better visual appeal */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Style for the colored table cells in Raw Responses */
+        .score-cell {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .score-5 { background-color: #d1fae5; color: #065f46; } /* Green */
+        .score-4 { background-color: #fef3c7; color: #b45309; } /* Yellow-Orange */
+        .status-active { background-color: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
+        .status-pending { background-color: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
+
+    </style>
+</head>
+<body class="font-sans bg-gray-50 antialiased" style="min-height: 100vh;">
+
+    <div id="app" class="min-h-screen">
+        <div id="loginView" class="hidden">
+            <div class="flex flex-col md:flex-row min-h-screen">
+                <div class="md:w-1/2 flex flex-col justify-between p-10 bg-cover bg-center text-white" 
+                     style="background-image: url('https://placehold.co/1200x800/22408D/ffffff?text=Valenzuela+City+Hall+Plaza');">
+                    <h1 class="4xl font-extrabold mb-4 md:mb-0 drop-shadow-lg">ARTA CSS System</h1>
+                    <div class="my-auto text-center">
+                        <div class="mx-auto w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white flex items-center justify-center bg-transparent backdrop-blur-sm">
+                            <svg class="w-2/3 h-2/3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.248a12.023 12.023 0 014.248 10.248a12.023 12.023 0 01-10.248 4.248c-3.131-.837-5.908-2.67-7.908-5.07c-2.062-2.4-3.166-5.46-3.166-8.73c0-1.8.318-3.56.918-5.212z"></path></svg>
+                        </div>
+                    </div>
+                    <p class="text-sm text-center drop-shadow-lg">Authorized personnel only. All access is monitored.</p>
+                </div>
+
+                <div class="md:w-1/2 flex items-center justify-center p-8 md:p-16 bg-white">
+                    <div class="w-full max-w-md">
+                        <h2 class="text-5xl font-extrabold text-gray-800 mb-10 text-center">Log In</h2>
+                        <form id="loginForm" class="space-y-6">
+                            <div>
+                                <label for="email" class="block text-lg font-medium text-gray-700">Email:</label>
+                                <div class="mt-2 relative rounded-xl shadow-md">
+                                    <input type="email" id="email" name="email" required placeholder="e.g. juan_delacruz@gmail.com"
+                                           class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 pr-12">
+                                    <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400">
+                                        <i data-lucide="mail" class="w-5 h-5"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="password" class="block text-lg font-medium text-gray-700">Password:</label>
+                                <div class="mt-2 relative rounded-xl shadow-md">
+                                    <input type="password" id="password" name="password" required
+                                           class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 pr-12">
+                                    <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400">
+                                        <i data-lucide="lock" class="w-5 h-5"></i>
+                                    </span>
+                                </div>
+                                <div class="text-sm mt-2 text-right">
+                                    <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                        Forgot password?
+                                    </a>
+                                </div>
+                            </div>
+                            <div id="loginError" class="text-red-600 text-center hidden">Invalid email or password.</div>
+                            <div class="pt-4">
+                                <button type="submit"
+                                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-xl text-lg font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                                    Log In
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboardView" class="hidden min-h-screen flex flex-col">
+            <header class="flex items-center justify-between p-4 bg-white shadow-md z-40 fixed w-full top-0">
+                <div class="flex items-center space-x-4">
+                    <button id="menu-toggle" class="md:hidden p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <div class="flex items-center justify-center flex-shrink-0">
+                        <img src="Admin Side/Nav Admin/footerlogo.png" alt="" class="w-12 h-12 object-contain"> 
+                    </div>
+                    
+                    <div class="hidden sm:block flex items-center justify-center flex-shrink-0">
+                         <img src="Admin Side/Nav Admin/text.png" alt="" class="w-32 h-12 object-contain"> 
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-800 hidden md:block">ARTA Customer Satisfaction Survey Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition duration-150">
+                    <div class="w-10 h-10 p-2 rounded-full flex-shrink-0">
+                         <img src="Admin Side/Nav Admin/admin.png" alt="" class="w-full h-full object-contain">
+                    </div>
+                    <span class="hidden sm:inline font-medium text-gray-700">Admin</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
+                    </div>
+            </header>
+
+            <div class="flex flex-grow pt-20">
+                <aside id="sidebar" class="bg-[#0b296b] pt-4 text-white w-64 md:w-64 flex-shrink-0 md:relative md:translate-x-0">
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold mb-1">ARTA CSS</h2>
+                        <p class="text-sm opacity-75">CONTROL CENTER</p>
+                    </div>
+                    <nav class="space-y-1 p-3">
+                        <a href="#" data-view="dashboard" class="nav-link flex items-center p-3 rounded-xl transition duration-150 ease-in-out bg-white text-[#0b296b] shadow-lg">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                            Dashboard
+                        </a>
+                        <a href="#" data-view="raw-responses" class="nav-link flex items-center p-3 rounded-xl transition duration-150 ease-in-out hover:bg-[#1f3f80] text-gray-200">
+                            <i data-lucide="database" class="w-5 h-5 mr-3"></i>
+                            Raw Responses
+                        </a>
+                        <a href="#" data-view="compliance-reports" class="nav-link flex items-center p-3 rounded-xl transition duration-150 ease-in-out hover:bg-[#1f3f80] text-gray-200">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                            Compliance Reports
+                        </a>
+                        <a href="#" data-view="manage-questions" class="nav-link flex items-center p-3 rounded-xl transition duration-150 ease-in-out hover:bg-[#1f3f80] text-gray-200">
+                            <i data-lucide="clipboard-list" class="w-5 h-5 mr-3"></i>
+                            Manage Questions
+                        </a>
+                        <a href="#" data-view="user-management" class="nav-link flex items-center p-3 rounded-xl transition duration-150 ease-in-out hover:bg-[#1f3f80] text-gray-200">
+                            <i data-lucide="user-cog" class="w-5 h-5 mr-3"></i>
+                            User Management
+                        </a>
+                        <a href="#" data-view="system-settings" class="nav-link flex items-center p-3 rounded-xl transition duration-150 ease-in-out hover:bg-[#1f3f80] text-gray-200">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+                            System Settings
+                        </a>
+                    </nav>
+                </aside>
+
+                <main id="content-area" class="flex-grow p-4 md:p-8 overflow-y-auto bg-gray-50 pt-4">
+                    <div id="dashboard" class="page-content hidden">
+                        <div class="mb-8">
+                            <h2 class="text-3xl font-extrabold text-gray-900">System Analytics Overview</h2>
+                            <p class="text-gray-500 mt-1">Welcome to the ARTA Customer Satisfaction Survey Admin Dashboard for Valenzuela City.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                                <p class="text-lg font-medium text-gray-500">TOTAL RESPONSES</p>
+                                <div class="flex items-center justify-between mt-1">
+                                    <h3 id="totalResponses" class="text-2xl font-extrabold text-gray-800">0</h3>
+                                    <div class="p-3 bg-red-100 text-red-600 rounded-full">
+                                        <i data-lucide="file-bar-chart-2" class="w-6 h-6"></i>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-2">Real-time Response Count from Firestore</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                                <p class="text-lg font-medium text-gray-500">AVG SATISFACTION</p>
+                                <div class="flex items-center justify-between mt-1">
+                                    <h3 id="avgSatisfaction" class="text-2xl font-extrabold text-gray-800">0.0 / 5</h3>
+                                    <div class="p-3 bg-yellow-100 text-yellow-600 rounded-full">
+                                        <i data-lucide="star" class="w-6 h-6"></i>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-2">Average SQD rating across all submissions</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                                <p class="text-lg font-medium text-gray-500">MOST AVAILED SERVICE</p>
+                                <div class="mt-1">
+                                    <h3 id="mostAvailedService" class="text-2xl font-bold text-gray-900">No data</h3>
+                                </div>
+                                <p class="text-sm text-gray-400 mt-2">Most frequently selected service</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500">
+                                <p class="text-lg font-medium text-gray-500">CLIENT TYPE</p>
+                                <div class="flex items-center justify-between mt-1">
+                                    <h3 id="clientTypeSummary" class="text-2xl font-extrabold text-gray-900">—</h3>
+                                    <div class="p-3 bg-blue-100 text-blue-600 rounded-full">
+                                        <i data-lucide="users" class="w-6 h-6"></i>
+                                    </div>
+                                </div>
+                                <p id="clientTypeSub" class="text-sm text-gray-400 mt-2">Distribution: Citizen / Business / Government</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <div class="flex items-center mb-4 text-blue-800">
+                                    <i data-lucide="trending-up" class="w-6 h-6 mr-2"></i>
+                                    <h4 class="text-lg font-bold">Average Rating per Service (Metric 1)</h4>
+                                </div>
+                                <p class="text-sm text-gray-500 mb-4">Service Quality Performance Metrics Using ARTA SQD Scores.</p>
+                                <div class="h-80">
+                                    <canvas id="serviceChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <div class="flex items-center mb-4 text-blue-800">
+                                    <i data-lucide="pie-chart" class="w-6 h-6 mr-2"></i>
+                                    <h4 class="text-lg font-bold">Client Type Distribution (Metric 2)</h4>
+                                </div>
+                                <p class="text-sm text-gray-500 mb-4">Survey Respondent Breakdown for Data Segmentation</p>
+                                <div class="h-80 flex items-center justify-center">
+                                    <canvas id="clientTypeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="raw-responses" class="page-content hidden">
+                        <h2 class="text-3xl font-extrabold text-gray-900">Raw Response Data</h2>
+                        <p class="text-gray-500 mt-1 mb-6">Includes all submissions, integrating data from survey platforms.</p>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150 ease-in-out">
+                                Filter Data
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto bg-white rounded-xl shadow-lg p-4">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE/TIME</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OFFICE/LOCATION</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CLIENT/TYPE</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SQD SCORE (Avg)</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">CITIZEN CHARTER AWARE</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50">
+                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Loading data from Firestore...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="compliance-reports" class="page-content hidden">
+                        <h2 class="text-3xl font-extrabold text-gray-900">Export & Reports</h2>
+                        <p class="text-gray-500 mt-1 mb-6">Generate official ARTA compliance reports and export data for further analysis.</p>
+
+                        <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-600 mb-6">
+                            <p class="font-medium text-blue-800">ARTA Compliance Notice: All reports follow the official ARTA metrics required for submission.</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">Export All Responses (CSV)</h3>
+                                    <p class="text-sm text-gray-500">Download raw dataset for analysis in tools like Excel.</p>
+                                </div>
+                                <button id="exportAllCsvBtn" class="flex items-center bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
+                                    <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                                    Export CSV
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">ARTA Compliance Report (PDF)</h3>
+                                    <p class="text-sm text-gray-500">Generate official ARTA compliant report with analytics and metrics for quarterly submission.</p>
+                                </div>
+                                <button id="downloadPdfBtn" class="flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
+                                    <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+                                    Download PDF
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">Generate Comprehensive ARTA Report</h3>
+                                    <p class="text-sm text-gray-500">Create comprehensive ARTA submission report with all required metrics and citizen feedback analysis.</p>
+                                </div>
+                                <button id="generateReportBtn" class="flex items-center bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
+                                    <i data-lucide="award" class="w-5 h-5 mr-2"></i>
+                                    Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="manage-questions" class="page-content hidden">
+                        <h2 class="text-3xl font-extrabold text-gray-900">Manage Survey Questions</h2>
+                        <p class="text-gray-500 mt-1 mb-6">Configure ARTA Customer Satisfaction Survey questions.</p>
+
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Question List</h3>
+                            <button class="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
+                                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                                Add CGOV Question
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 flex justify-between items-start">
+                                <div>
+                                    <p class="font-semibold text-lg text-gray-800">SDQ0: I am Satisfied with the service that I availed.</p>
+                                    <div class="mt-2 space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">SQD METRIC</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">REQUIRED</span>
+                                        <button class="text-xs font-medium text-blue-600 hover:text-blue-800 p-1 rounded-md transition duration-150">EDIT</button>
+                                    </div>
+                                </div>
+                                <button class="text-gray-400 hover:text-red-500 transition duration-150">
+                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 flex justify-between items-start">
+                                <div>
+                                    <p class="font-semibold text-lg text-gray-800">CC1: I am satisfied with the service that I availed.</p>
+                                    <div class="mt-2 space-x-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">CC METRIC</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">REQUIRED</span>
+                                        <button class="text-xs font-medium text-blue-600 hover:text-blue-800 p-1 rounded-md transition duration-150">EDIT</button>
+                                    </div>
+                                </div>
+                                <button class="text-gray-400 hover:text-red-500 transition duration-150">
+                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
+                                </button>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-600 mt-6">
+                                <p class="text-sm text-blue-800">The questions are ARTA-compliant and necessary for official reports; modifications must adhere to Anti-Red tape Authority standards.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="user-management" class="page-content hidden">
+                        <h2 class="text-3xl font-extrabold text-gray-900">User Management</h2>
+                        <p class="text-gray-500 mt-1 mb-6">Manage admin users and assign role-based access control (RBAC).</p>
+
+                        <button id="showAddUserBtn" class="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150 mb-6">
+                            <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
+                            Add User
+                        </button>
+
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Existing Users</h3>
+                        
+                        <div class="overflow-x-auto bg-white rounded-xl shadow-lg p-4 mb-8">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NAME</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EMAIL</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ROLE</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Jhairon Clarence</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">clarence@gmail.com</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Admin</span></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="status-active">Active</span></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                            <button class="text-blue-600 hover:text-blue-800"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
+                                            <button class="text-red-600 hover:text-red-800"><i data-lucide="trash" class="w-5 h-5"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Admin User 2</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">admin2@arta.gov</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Admin</span></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="status-pending">Pending</span></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                            <button class="text-blue-600 hover:text-blue-800"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
+                                            <button class="text-red-600 hover:text-red-800"><i data-lucide="trash" class="w-5 h-5"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Role Permissions</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                                <h4 class="text-lg font-bold text-gray-800 mb-2">Admin</h4>
+                                <p class="text-gray-600 text-sm">Full Operational Access. Includes User Management, Manage Questions, Raw Responses, and Compliance Reports. Excludes System Settings.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                                <h4 class="text-lg font-bold text-gray-800 mb-2">Data Analyst</h4>
+                                <p class="text-gray-600 text-sm">Data & Reporting Modules Only. Includes Dashboard, Raw Responses, and Compliance Reports.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                                <h4 class="text-lg font-bold text-gray-800 mb-2">Survey Manager</h4>
+                                <p class="text-gray-600 text-sm">Content Management Only. Primarily Manage Questions. May include access to the Dashboard for results overview.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="add-user-form" class="page-content hidden">
+                        <div class="flex flex-col md:flex-row min-h-[calc(100vh-8rem)]"> 
+                            <div class="md:w-1/2 flex flex-col justify-between p-10 bg-cover bg-center text-white rounded-xl shadow-xl" 
+                                 style="background-image: url('Admin Side/Add User/city.png');">
+                                <h1 class="4xl font-extrabold mb-4 md:mb-0 drop-shadow-lg">ARTA CSS System</h1>
+                                <div class="my-auto text-center">
+                                    <div class="mx-auto w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-white flex items-center justify-center bg-transparent backdrop-blur-sm">
+                                        <img src="Admin Side/Add User/seal.png" alt="" class="w-full h-full object-contain">
+                                    </div>
+                                    </div>
+                                <p class="text-sm text-center drop-shadow-lg">Authorized personnel only. All access is monitored.</p>
+                            </div>
+
+                            <div class="md:w-1/2 flex items-center justify-center p-8 md:p-16 bg-white rounded-xl shadow-xl md:ml-6 mt-6 md:mt-0">
+                                <div class="w-full max-w-md">
+                                    <h2 class="text-5xl font-extrabold text-gray-800 mb-10 text-center">Add User</h2>
+                                    <form id="addUserForm" class="space-y-6">
+                                        <div class="flex space-x-4">
+                                            <div class="w-1/2">
+                                                <label for="firstName" class="block text-lg font-medium text-gray-700">First Name:</label>
+                                                <input type="text" id="firstName" name="firstName" required 
+                                                       class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900" 
+                                                       aria-label="First Name">
+                                                <p id="firstNameError" class="text-red-500 text-sm mt-1 hidden">First name is required.</p>
+                                            </div>
+                                            <div class="w-1/2">
+                                                <label for="lastName" class="block text-lg font-medium text-gray-700">Last Name:</label>
+                                                <input type="text" id="lastName" name="lastName" required 
+                                                       class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                                       aria-label="Last Name">
+                                                <p id="lastNameError" class="text-red-500 text-sm mt-1 hidden">Last name is required.</p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label for="userEmail" class="block text-lg font-medium text-gray-700">Email:</label>
+                                            <div class="mt-2 relative rounded-xl shadow-md">
+                                                <input type="email" id="userEmail" name="userEmail" required placeholder="e.g. juandelacruz@gmail.com"
+                                                       class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 pr-12">
+                                                <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400">
+                                                    <i data-lucide="mail" class="w-5 h-5"></i>
+                                                </span>
+                                            </div>
+                                            <p id="emailError" class="text-red-500 text-sm mt-1 hidden">Enter a valid email address.</p>
+                                        </div>
+
+                                        <div>
+                                            <label for="userRole" class="block text-lg font-medium text-gray-700">Role</label>
+                                            <div class="mt-2 relative">
+                                                <select id="userRole" name="userRole" required
+                                                        class="w-full px-5 py-3 appearance-none border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 cursor-pointer pr-12 bg-white">
+                                                    <option value="" disabled selected>Select a role</option>
+                                                    <option value="admin">Admin</option>
+                                                    <option value="data analyst">Data Analyst</option>
+                                                    <option value="survey manager">Survey Manager</option>
+                                                </select>
+                                                <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400 pointer-events-none">
+                                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
+                                                </span>
+                                            </div>
+                                            <p id="roleError" class="text-red-500 text-sm mt-1 hidden">Please select a role.</p>
+                                        </div>
+
+                                        <div class="pt-4">
+                                            <button type="submit"
+                                                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-xl text-lg font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
+                                                Invite User
+                                            </button>
+                                            <p id="goBackBtn" class="text-sm mt-4 text-center text-gray-600 hover:text-blue-600 cursor-pointer">
+                                                &larr; Go Back
+                                            </p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="system-settings" class="page-content hidden">
+                        <h2 class="text-3xl font-extrabold text-gray-900">System Settings</h2>
+                        <p class="text-gray-500 mt-1 mb-6">Update the system title and contact email. Keep platform details accurate for identification and communication purposes.</p>
+
+                        <div class="bg-white p-8 rounded-xl shadow-lg max-w-2xl">
+                            <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-3">General Configuration</h3>
+                            
+                            <form>
+                                <div class="mb-6">
+                                    <label for="systemTitle" class="block text-lg font-medium text-gray-700 mb-2">System Title:</label>
+                                    <input type="text" id="systemTitle" placeholder="e.g., ARTA CSS Valenzuela"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div class="mb-6">
+                                    <label for="contactEmail" class="block text-lg font-medium text-gray-700 mb-2">Contact Email:</label>
+                                    <input type="email" id="contactEmail" placeholder="e.g., arta@valenzuela.gov.ph"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                
+                                <button type="submit"
+                                        class="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-150">
+                                    Save Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    </main>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module">
+        // --- Firestore Integration ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlmbelcBvE8T-j2_bCeam5oGR7g3zhLz8",
+            authDomain: "daisysyete-c9511.firebaseapp.com",
+            projectId: "daisysyete-c9511",
+            storageBucket: "daisysyete-c9511.firebasestorage.app",
+            messagingSenderId: "84742185648",
+            appId: "1:84742185648:web:05d506b26a2b725644d175",
+            measurementId: "G-0H67RTVBTQ"
+        };
+
+        // Initialize Firebase
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getFirestore(firebaseApp);
+
+        // Store Firestore references globally for use in other scripts
+        window.db = db;
+        window.collection = collection;
+        window.onSnapshot = onSnapshot;
+
+        // Helper function to safely update DOM elements
+        function safeUpdateElement(id, value) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value;
+            } else {
+                console.warn(`Element with id '${id}' not found`);
+            }
+        }
+
+        // Initialize real-time listeners with a slight delay to ensure DOM is ready
+        setTimeout(() => {
+            const surveyResponsesRef = collection(db, "survey_responses");
+
+            // Listen for survey responses in real-time
+            onSnapshot(surveyResponsesRef, (snapshot) => {
+                const responses = [];
+                snapshot.forEach((doc) => {
+                    responses.push({ id: doc.id, ...doc.data() });
+                });
+                
+                console.log('Firestore data received:', responses);
+                
+                // Update metrics with aggregated data
+                updateMetrics(responses);
+                updateCharts(responses);
+                updateResponsesTable(responses);
+            }, (error) => {
+                console.error('Firestore listener error:', error);
+            });
+        }, 100);
+
+        /**
+         * Aggregates response data and updates metric placeholders
+         * @param {Array} responses - Array of response documents from Firestore
+         */
+        function updateMetrics(responses) {
+            if (!responses || responses.length === 0) {
+                safeUpdateElement('totalResponses', '0');
+                safeUpdateElement('avgSatisfaction', '0.0 / 5');
+                safeUpdateElement('mostAvailedService', 'No data');
+                safeUpdateElement('clientTypeSummary', '—');
+                return;
+            }
+
+            const totalResponses = responses.length;
+            let totalSqdSum = 0;
+            let totalSqdCount = 0;
+            const serviceMap = {};
+            const clientTypeCounts = { Citizen: 0, Business: 0, Government: 0 };
+
+            responses.forEach(doc => {
+                // Aggregate SQD scores from serviceQuality object
+                const sq = doc.serviceQuality || {};
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) {
+                        totalSqdSum += v;
+                        totalSqdCount += 1;
+                    }
+                });
+
+                // Track services
+                const svc = (doc.serviceAvailed || 'Unknown').trim() || 'Unknown';
+                if (!serviceMap[svc]) serviceMap[svc] = { count: 0 };
+                serviceMap[svc].count += 1;
+
+                // Track client types
+                const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
+                if (ctRaw.includes('citizen')) clientTypeCounts.Citizen += 1;
+                else if (ctRaw.includes('business')) clientTypeCounts.Business += 1;
+                else if (ctRaw.includes('government')) clientTypeCounts.Government += 1;
+            });
+
+            const avgSqd = totalSqdCount > 0 ? (totalSqdSum / totalSqdCount) : 0;
+            let mostAvailed = 'No data';
+            let maxCount = 0;
+            Object.keys(serviceMap).forEach(svc => {
+                if (serviceMap[svc].count > maxCount) {
+                    maxCount = serviceMap[svc].count;
+                    mostAvailed = svc;
+                }
+            });
+
+            // Update metric elements
+            safeUpdateElement('totalResponses', totalResponses.toString());
+            safeUpdateElement('avgSatisfaction', `${avgSqd.toFixed(1)} / 5`);
+            safeUpdateElement('mostAvailedService', mostAvailed);
+
+            const total = totalResponses;
+            const pct = (n) => ((n / total) * 100).toFixed(0) + '%';
+            safeUpdateElement('clientTypeSummary', `Citizen ${pct(clientTypeCounts.Citizen)} • Business ${pct(clientTypeCounts.Business)} • Govt ${pct(clientTypeCounts.Government)}`);
+        }
+
+        /**
+         * Updates charts with real-time response data
+         * @param {Array} responses - Array of response documents from Firestore
+         */
+        function updateCharts(responses) {
+            if (!responses || responses.length === 0) return;
+
+            const totalResponses = responses.length;
+            const serviceMap = {};
+            const clientTypeCounts = { Citizen: 0, Business: 0, Government: 0 };
+
+            responses.forEach(doc => {
+                // Aggregate service SQD scores
+                const svc = (doc.serviceAvailed || 'Unknown').trim() || 'Unknown';
+                const sq = doc.serviceQuality || {};
+                if (!serviceMap[svc]) serviceMap[svc] = { sumScore: 0, countScore: 0 };
+                
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) {
+                        serviceMap[svc].sumScore += v;
+                        serviceMap[svc].countScore += 1;
+                    }
+                });
+
+                // Aggregate client types
+                const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
+                if (ctRaw.includes('citizen')) clientTypeCounts.Citizen += 1;
+                else if (ctRaw.includes('business')) clientTypeCounts.Business += 1;
+                else if (ctRaw.includes('government')) clientTypeCounts.Government += 1;
+            });
+
+            // Prepare service chart data
+            const serviceLabels = Object.keys(serviceMap);
+            const serviceData = serviceLabels.map(svc => {
+                const avg = serviceMap[svc].countScore > 0 ? (serviceMap[svc].sumScore / serviceMap[svc].countScore) : 0;
+                return parseFloat(avg.toFixed(2));
+            });
+
+            // Update service chart
+            if (window.serviceChartInstance) {
+                window.serviceChartInstance.data.labels = serviceLabels;
+                window.serviceChartInstance.data.datasets[0].data = serviceData;
+                window.serviceChartInstance.update();
+            }
+
+            // Update client type chart
+            if (window.clientTypeChartInstance) {
+                window.clientTypeChartInstance.data.datasets[0].data = [clientTypeCounts.Citizen, clientTypeCounts.Business, clientTypeCounts.Government];
+                window.clientTypeChartInstance.update();
+            }
+        }
+
+        /**
+         * Updates the raw responses table with real-time data
+         * @param {Array} responses - Array of response documents from Firestore
+         */
+        function updateResponsesTable(responses) {
+            const tableBody = document.querySelector('#raw-responses tbody');
+            if (!tableBody) return;
+
+            if (responses.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No survey responses yet</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            responses.slice(0, 10).forEach((doc, index) => {
+                const sq = doc.serviceQuality || {};
+                let sqSum = 0, sqCount = 0;
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) { sqSum += v; sqCount += 1; }
+                });
+                const avgSqd = sqCount > 0 ? (sqSum / sqCount) : 0;
+
+                const submittedAt = doc.submittedAt ? new Date(doc.submittedAt.toDate ? doc.submittedAt.toDate() : doc.submittedAt).toLocaleString() : 'N/A';
+                const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
+                const isCitizen = ctRaw.includes('citizen');
+                const ccAwere = doc.citizensCharter && doc.citizensCharter.cc1 !== '4' ? 'Yes' : 'No';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${String(index + 1).padStart(3, '0')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${submittedAt}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${doc.officeLocation || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${isCitizen ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">
+                            ${doc.clientType || 'Unknown'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        <span class="score-cell ${avgSqd >= 4.5 ? 'score-5' : 'score-4'}">
+                            ${avgSqd.toFixed(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center ${ccAwere === 'Yes' ? 'text-blue-600' : 'text-red-600'} font-semibold">
+                        ${ccAwere}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Expose update functions globally for use in main script
+        window.updateMetrics = updateMetrics;
+        window.updateCharts = updateCharts;
+        window.updateResponsesTable = updateResponsesTable;
+    </script>
+
+    <script>
+        // --- Configuration ---
+        const SUPER_ADMIN_EMAIL = 'super@admin.com';
+        const SUPER_ADMIN_PASSWORD = 'password123';
+        
+        // --- Element Selection ---
+        const app = document.getElementById('app');
+        const loginView = document.getElementById('loginView');
+        const dashboardView = document.getElementById('dashboardView');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageContents = document.querySelectorAll('.page-content');
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+
+        const showAddUserBtn = document.getElementById('showAddUserBtn'); // NEW
+        const addUserForm = document.getElementById('addUserForm'); // NEW
+        const goBackBtn = document.getElementById('goBackBtn'); // NEW
+
+        let currentView = 'dashboard';
+
+        // --- Core Functions ---
+
+        /**
+         * Initializes Chart.js graphs for the dashboard.
+         * Must be called only once or after the dashboard view is visible.
+         */
+        function initCharts() {
+            // Check if charts are already initialized
+            if (window.serviceChartInstance || window.clientTypeChartInstance) return;
+            
+            // Chart 1: Average Rating per Service (Horizontal Bar) - Start empty
+            const serviceCtx = document.getElementById('serviceChart');
+            if (serviceCtx) {
+                window.serviceChartInstance = new Chart(serviceCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Average SQD Score',
+                            data: [],
+                            backgroundColor: '#2563EB',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: false }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 5,
+                                grid: { drawBorder: false },
+                                ticks: { stepSize: 1 }
+                            },
+                            y: {
+                                grid: { drawBorder: false, display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Chart 2: Client Type Distribution (Doughnut) - Start empty
+            const clientTypeCtx = document.getElementById('clientTypeChart');
+            if (clientTypeCtx) {
+                window.clientTypeChartInstance = new Chart(clientTypeCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Citizen', 'Business', 'Government'],
+                        datasets: [{
+                            label: 'Client Type Distribution',
+                            data: [0, 0, 0],
+                            backgroundColor: ['#1D4ED8', '#60A5FA', '#93C5FD']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const value = context.parsed || 0;
+                                        const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return `${context.label}: ${pct}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        /**
+         * Handles screen navigation within the dashboard.
+         * @param {string} viewId - The ID of the view to show (e.g., 'dashboard', 'raw-responses').
+         */
+        function navigateTo(viewId) {
+            currentView = viewId;
+            
+            // 1. Hide all page contents
+            pageContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // 2. Show the requested page content
+            const targetContent = document.getElementById(viewId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                
+                // Special case: Initialize charts on dashboard load
+                if (viewId === 'dashboard') {
+                    initCharts();
+                }
+            }
+
+            // 3. Update active sidebar link state
+            // Logic to handle 'add-user-form' being a sub-view of 'user-management'
+            let activeLinkView = viewId === 'add-user-form' ? 'user-management' : viewId;
+
+            navLinks.forEach(link => {
+                link.classList.remove('bg-white', 'text-[#0b296b]', 'shadow-lg');
+                link.classList.add('hover:bg-[#1f3f80]', 'text-gray-200');
+                if (link.dataset.view === activeLinkView) {
+                    link.classList.add('bg-white', 'text-[#0b296b]', 'shadow-lg');
+                    link.classList.remove('hover:bg-[#1f3f80]', 'text-gray-200');
+                }
+            });
+
+            // 4. Hide sidebar on mobile after navigation
+            if (window.innerWidth < 768) {
+                sidebar.classList.remove('open');
+            }
+        }
+        
+        /**
+         * Toggles the main application view between Login and Dashboard.
+         * @param {boolean} loggedIn - True to show dashboard, false to show login.
+         */
+        function toggleAppView(loggedIn) {
+            if (loggedIn) {
+                loginView.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                navigateTo('dashboard'); // Default to dashboard home
+            } else {
+                dashboardView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+                loginError.classList.add('hidden');
+            }
+            // Re-render Lucide icons after DOM manipulation
+            lucide.createIcons(); 
+        }
+
+        /**
+         * Clears all validation error messages for the Add User form.
+         */
+        function clearAddUserErrors() {
+            document.getElementById('firstNameError').classList.add('hidden');
+            document.getElementById('lastNameError').classList.add('hidden');
+            document.getElementById('emailError').classList.add('hidden');
+            document.getElementById('roleError').classList.add('hidden');
+        }
+
+        /**
+         * Validates the Add User form fields.
+         * @returns {boolean} True if the form is valid, false otherwise.
+         */
+        function validateAddUserForm() {
+            clearAddUserErrors();
+            let isValid = true;
+
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            const userEmail = document.getElementById('userEmail');
+            const userRole = document.getElementById('userRole');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (firstName.value.trim() === '') {
+                document.getElementById('firstNameError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (lastName.value.trim() === '') {
+                document.getElementById('lastNameError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (!emailRegex.test(userEmail.value) || userEmail.value.trim() === '') {
+                document.getElementById('emailError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            if (userRole.value === '' || userRole.value === 'Select a role') { // Check for default disabled option
+                document.getElementById('roleError').classList.remove('hidden');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // --- Event Listeners ---
+        
+        // 1. Login Form Submission
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
+                toggleAppView(true);
+            } else {
+                loginError.textContent = 'Invalid email or password.';
+                loginError.classList.remove('hidden');
+            }
+        });
+
+        // 2. Sidebar Navigation Clicks
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const viewId = this.dataset.view;
+                navigateTo(viewId);
+            });
+        });
+
+        // 3. Mobile Menu Toggle
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+
+        // 4. NEW: Show Add User Form (from User Management)
+        showAddUserBtn.addEventListener('click', function() {
+            navigateTo('add-user-form');
+        });
+
+        // 5. NEW: Go Back to User Management (from Add User Form)
+        goBackBtn.addEventListener('click', function() {
+            navigateTo('user-management');
+        });
+
+        // 6. NEW: Add User Form Submission with Validation and Pop-up
+        addUserForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            if (validateAddUserForm()) {
+                // Mock: Successful invitation
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                const role = document.getElementById('userRole').value;
+                
+                // Show a simple success alert (pop-up)
+                alert(`Successfully invited user: ${firstName} ${lastName} as a ${role}.`);
+
+                // Clear the form and errors
+                addUserForm.reset();
+                clearAddUserErrors();
+
+                // Go back to the Manage Users dashboard
+                navigateTo('user-management');
+            }
+        });
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set initial state to bypass login and show dashboard
+            toggleAppView(true); 
+        });
+
+        // Ensure lucide icons are created on first load for the login view
+        lucide.createIcons();
+
+    </script>
+</body>
+</html>
