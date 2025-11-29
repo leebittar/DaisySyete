@@ -18,19 +18,30 @@ service cloud.firestore {
     
     // ===== Survey Responses Collection =====
     // Users can only CREATE new survey submissions
+    // Admins can READ survey data for dashboard analytics
     // Users CANNOT read, update, or delete their own submissions
     match /survey_responses/{docId} {
       // Allow anyone to create a new survey response (write)
       allow create: if request.auth == null || isValidSurveySubmission();
       
-      // Prevent reading survey data (only admins should read)
-      allow read: if false;
+      // Allow admins to read survey data (with admin claim)
+      // For development/testing, also allow unauthenticated reads
+      allow read: if isAdmin() || request.auth == null;
       
       // Prevent updating or deleting submissions
       allow update, delete: if false;
     }
 
     // ===== Helper Functions =====
+    
+    /**
+     * Checks if the current user is an admin
+     * Returns true if user is authenticated with admin claim set to true
+     */
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.admin == true;
+    }
     
     /**
      * Validates incoming survey submission data
