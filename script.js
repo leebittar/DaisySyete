@@ -114,7 +114,7 @@ const steps = [
   { id: 'form-4', progress: 90 }
 ];
 
-const sqdQuestions = [
+let sqdQuestions = [
   "SQD0. I am satisfied with the service that I availed.",
   "SQD1. I spent a reasonable amount of time for my transaction.",
   "SQD2. The office followed the transaction's requirements and steps based on the information provided.",
@@ -125,6 +125,38 @@ const sqdQuestions = [
   "SQD7. I was treated courteously by the staff, and (if asked for help) the staff was helpful.",
   "SQD8. I got what I needed from the government office, or if denied, the reason was explained to me clearly."
 ];
+
+// Load questions from Firestore if Firebase is available
+(async function loadQuestionsFromFirestore() {
+  try {
+    // Check if Firebase is initialized
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+      const db = firebase.firestore();
+      const questionsRef = db.collection('survey_questions');
+      
+      // Set up real-time listener for SQD questions
+      questionsRef
+        .where('type', '==', 'SQD')
+        .orderBy('order', 'asc')
+        .onSnapshot((snapshot) => {
+          const updatedQuestions = [];
+          snapshot.forEach((doc) => {
+            updatedQuestions.push(`${doc.data().code}. ${doc.data().text}`);
+          });
+          if (updatedQuestions.length > 0) {
+            sqdQuestions = updatedQuestions;
+            console.log('SQD Questions updated from Firestore:', sqdQuestions.length);
+            // Optionally re-render if survey page is active
+            if (typeof renderSQDQuestions === 'function' && document.getElementById('sqd-questions-container')) {
+              renderSQDQuestions();
+            }
+          }
+        });
+    }
+  } catch (error) {
+    console.warn('Could not load questions from Firestore:', error);
+  }
+})();
 
 const moods = [
   { label: 'Strongly Disagree', value: '1', icon: '<img src="User View/Survey/strongly disagree.png" alt="Strongly Disagree" class="w-12 h-10.5">' },

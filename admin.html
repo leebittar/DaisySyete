@@ -49,6 +49,9 @@
         .status-pending { background-color: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
 
     </style>
+    <!-- Libraries for data export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>    </style>
 </head>
 <body class="font-sans bg-gray-50 antialiased" style="min-height: 100vh;">
 
@@ -316,42 +319,24 @@
 
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xl font-bold text-gray-800">Question List</h3>
-                            <button class="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
-                                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
-                                Add CGOV Question
-                            </button>
+                            <div class="flex gap-3">
+                                <button id="setupQuestionsBtn" class="flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
+                                    <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                                    Load Default Questions
+                                </button>
+                                <button id="addQuestionBtn" class="flex items-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150">
+                                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                                    Add CGOV Question
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="space-y-4">
-                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 flex justify-between items-start">
-                                <div>
-                                    <p class="font-semibold text-lg text-gray-800">SDQ0: I am Satisfied with the service that I availed.</p>
-                                    <div class="mt-2 space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">SQD METRIC</span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">REQUIRED</span>
-                                        <button class="text-xs font-medium text-blue-600 hover:text-blue-800 p-1 rounded-md transition duration-150">EDIT</button>
-                                    </div>
-                                </div>
-                                <button class="text-gray-400 hover:text-red-500 transition duration-150">
-                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                                </button>
-                            </div>
-                            <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 flex justify-between items-start">
-                                <div>
-                                    <p class="font-semibold text-lg text-gray-800">CC1: I am satisfied with the service that I availed.</p>
-                                    <div class="mt-2 space-x-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">CC METRIC</span>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">REQUIRED</span>
-                                        <button class="text-xs font-medium text-blue-600 hover:text-blue-800 p-1 rounded-md transition duration-150">EDIT</button>
-                                    </div>
-                                </div>
-                                <button class="text-gray-400 hover:text-red-500 transition duration-150">
-                                    <i data-lucide="trash-2" class="w-6 h-6"></i>
-                                </button>
-                            </div>
-                            <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-600 mt-6">
-                                <p class="text-sm text-blue-800">The questions are ARTA-compliant and necessary for official reports; modifications must adhere to Anti-Red tape Authority standards.</p>
-                            </div>
+                        <div id="questionsContainer" class="space-y-4">
+                            <!-- Questions will be dynamically loaded here -->
+                        </div>
+
+                        <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-600 mt-6">
+                            <p class="text-sm text-blue-800">The questions are ARTA-compliant and necessary for official reports; modifications must adhere to Anti-Red tape Authority standards.</p>
                         </div>
                     </div>
 
@@ -530,8 +515,112 @@
         </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4" id="modalTitle">Confirm Action</h2>
+            <p class="text-gray-600 mb-6" id="modalMessage">Are you sure you want to proceed with this action?</p>
+            
+            <div class="flex gap-4">
+                <button id="confirmBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition duration-150">
+                    Proceed
+                </button>
+                <button id="cancelBtn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-4 rounded-xl transition duration-150">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Question Modal -->
+    <div id="editQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 my-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Edit Question</h2>
+            
+            <form id="editQuestionForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Code</label>
+                    <input type="text" id="editQuestionCode" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" readonly>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Text</label>
+                    <textarea id="editQuestionText" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-24" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
+                    <select id="editQuestionType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="SQD">SQD Metric</option>
+                        <option value="CC">CC Metric</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="editQuestionRequired" class="w-4 h-4 text-blue-600 rounded">
+                        <span class="ml-2 text-sm text-gray-700">Required Question</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150">
+                        Save Changes
+                    </button>
+                    <button type="button" id="closeEditModal" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition duration-150">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Question Modal -->
+    <div id="addQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 my-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Add New Question</h2>
+            
+            <form id="addQuestionForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Code</label>
+                    <input type="text" id="newQuestionCode" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., SDQ1, CC2" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Text</label>
+                    <textarea id="newQuestionText" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-24" placeholder="Enter the question text" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
+                    <select id="newQuestionType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="SQD">SQD Metric</option>
+                        <option value="CC">CC Metric</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="newQuestionRequired" class="w-4 h-4 text-blue-600 rounded" checked>
+                        <span class="ml-2 text-sm text-gray-700">Required Question</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150">
+                        Add Question
+                    </button>
+                    <button type="button" id="closeAddModal" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition duration-150">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="setup-survey-questions.js"></script>
     <script type="module">
         // --- Firestore Integration ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -556,6 +645,7 @@
         window.db = db;
         window.collection = collection;
         window.onSnapshot = onSnapshot;
+        window.allSurveyResponses = []; // Store all responses for export functions
 
         // Helper function to safely update DOM elements
         function safeUpdateElement(id, value) {
@@ -577,6 +667,9 @@
                 snapshot.forEach((doc) => {
                     responses.push({ id: doc.id, ...doc.data() });
                 });
+                
+                // Store responses globally for export functions
+                window.allSurveyResponses = responses;
                 
                 console.log('Firestore data received:', responses);
                 
@@ -886,6 +979,11 @@
                 if (viewId === 'dashboard') {
                     initCharts();
                 }
+                
+                // Special case: Load questions on manage-questions load
+                if (viewId === 'manage-questions') {
+                    loadSurveyQuestions();
+                }
             }
 
             // 3. Update active sidebar link state
@@ -972,6 +1070,663 @@
             return isValid;
         }
 
+        /**
+         * Store survey questions globally - loaded from survey.html's script.js
+         */
+        window.allSurveyQuestions = [];
+
+        /**
+         * Load survey questions from the global sqdQuestions array (from script.js)
+         * This syncs with what users see in survey.html
+         */
+        /**
+         * Initialize survey questions from Firestore with real-time listener
+         */
+        function initializeSurveyQuestionsFromFirestore() {
+            const db = firebase.firestore();
+            const questionsRef = db.collection('survey_questions');
+
+            // Real-time listener for questions
+            questionsRef.orderBy('order', 'asc').onSnapshot((snapshot) => {
+                window.allSurveyQuestions = [];
+                snapshot.forEach((doc) => {
+                    window.allSurveyQuestions.push({
+                        id: doc.id,
+                        code: doc.data().code || '',
+                        text: doc.data().text || '',
+                        type: doc.data().type || 'SQD',
+                        required: doc.data().required || true,
+                        order: doc.data().order || 0
+                    });
+                });
+                console.log('Questions synced from Firestore:', window.allSurveyQuestions.length);
+                // Refresh UI if manage-questions tab is active
+                if (document.getElementById('manage-questions') && !document.getElementById('manage-questions').classList.contains('hidden')) {
+                    loadSurveyQuestions();
+                }
+            }, (error) => {
+                console.error('Error loading questions:', error);
+            });
+        }
+
+        /**
+         * Initialize default questions to Firestore (first time setup)
+         */
+        async function loadDefaultQuestionsToFirestore() {
+            const db = firebase.firestore();
+            const questionsRef = db.collection('survey_questions');
+
+            try {
+                // Check if questions already exist
+                const existingQuestions = await questionsRef.limit(1).get();
+                if (!existingQuestions.empty) {
+                    console.log('Questions already exist in Firestore');
+                    return;
+                }
+
+                // Default questions
+                const defaultQuestions = [
+                    { code: 'SQD0', text: 'I am satisfied with the service that I availed.', type: 'SQD', required: true, order: 0 },
+                    { code: 'SQD1', text: 'I spent a reasonable amount of time for my transaction.', type: 'SQD', required: true, order: 1 },
+                    { code: 'SQD2', text: 'The office followed the transaction\'s requirements and steps based on the information provided.', type: 'SQD', required: true, order: 2 },
+                    { code: 'SQD3', text: 'The steps (including payment) I needed to do for my transaction were easy and simple.', type: 'SQD', required: true, order: 3 },
+                    { code: 'SQD4', text: 'I easily found information about my transaction from the office or its website.', type: 'SQD', required: true, order: 4 },
+                    { code: 'SQD5', text: 'I paid a reasonable amount of fees for my transaction. (If service was free, mark the \'N/A\' option)', type: 'SQD', required: true, order: 5 },
+                    { code: 'SQD6', text: 'I feel the office was fair to everyone, or \'walang palakasan\', during my transaction.', type: 'SQD', required: true, order: 6 },
+                    { code: 'SQD7', text: 'I was treated courteously by the staff, and (if asked for help) the staff was helpful.', type: 'SQD', required: true, order: 7 },
+                    { code: 'SQD8', text: 'I got what I needed from the government office, or if denied, the reason was explained to me clearly.', type: 'SQD', required: true, order: 8 },
+                    { code: 'CC1', text: 'Which of the following best describes your awareness of a CC?', type: 'CC', required: true, order: 9 },
+                    { code: 'CC2', text: 'If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was easy to see?', type: 'CC', required: true, order: 10 },
+                    { code: 'CC3', text: 'If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was helpful?', type: 'CC', required: true, order: 11 }
+                ];
+
+                // Add all questions to Firestore
+                for (const question of defaultQuestions) {
+                    const docId = question.code.toLowerCase();
+                    await questionsRef.doc(docId).set(question);
+                }
+
+                console.log('Default questions loaded to Firestore');
+            } catch (error) {
+                console.error('Error loading default questions:', error);
+            }
+        }
+
+        /**
+         * Load survey questions from Firestore or use defaults
+         */
+        function loadSurveyQuestions() {
+            const questionsContainer = document.getElementById('questionsContainer');
+            if (!questionsContainer) return;
+
+            questionsContainer.innerHTML = '';
+
+            const questions = window.allSurveyQuestions || [];
+
+            if (questions.length === 0) {
+                questionsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">No questions available</p>';
+                return;
+            }
+
+            questions.forEach((question, index) => {
+                const typeColor = question.type === 'SQD' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
+                const typeLabel = question.type === 'SQD' ? 'SQD METRIC' : 'CC METRIC';
+                
+                const questionCard = document.createElement('div');
+                questionCard.className = 'bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-600 flex justify-between items-start';
+                questionCard.innerHTML = `
+                    <div class="flex-1">
+                        <p class="font-semibold text-lg text-gray-800">${question.code}: ${question.text}</p>
+                        <div class="mt-2 space-x-2">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColor}">${typeLabel}</span>
+                            ${question.required ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">REQUIRED</span>' : ''}
+                            <button class="edit-btn text-xs font-medium text-blue-600 hover:text-blue-800 p-1 rounded-md transition duration-150" data-question-id="${question.id}">EDIT</button>
+                        </div>
+                    </div>
+                    <button class="delete-btn text-gray-400 hover:text-red-500 transition duration-150" data-question-id="${question.id}">
+                        <i data-lucide="trash-2" class="w-6 h-6"></i>
+                    </button>
+                `;
+                questionsContainer.appendChild(questionCard);
+            });
+
+            // Re-render Lucide icons
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+
+            // Attach event listeners to edit and delete buttons
+            attachQuestionEventListeners();
+        }
+
+        /**
+         * Attach event listeners to edit and delete buttons
+         */
+        function attachQuestionEventListeners() {
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const questionId = this.getAttribute('data-question-id');
+                    openEditQuestionModal(questionId);
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const questionId = this.getAttribute('data-question-id');
+                    const question = window.allSurveyQuestions.find(q => q.id === questionId);
+                    showConfirmationModal(
+                        'Delete Question',
+                        `Are you sure you want to delete "${question.code}: ${question.text}"?`,
+                        () => deleteQuestion(questionId)
+                    );
+                });
+            });
+        }
+
+        /**
+         * Open edit question modal
+         */
+        function openEditQuestionModal(questionId) {
+            const question = window.allSurveyQuestions.find(q => q.id === questionId);
+            if (!question) return;
+
+            document.getElementById('editQuestionCode').value = question.code;
+            document.getElementById('editQuestionText').value = question.text;
+            document.getElementById('editQuestionType').value = question.type;
+            document.getElementById('editQuestionRequired').checked = question.required;
+
+            const modal = document.getElementById('editQuestionModal');
+            modal.classList.remove('hidden');
+
+            // Store the question ID for use in save function
+            modal.dataset.questionId = questionId;
+        }
+
+        /**
+         * Close edit question modal
+         */
+        function closeEditQuestionModal() {
+            document.getElementById('editQuestionModal').classList.add('hidden');
+        }
+
+        /**
+         * Open add question modal
+         */
+        function openAddQuestionModal() {
+            document.getElementById('addQuestionForm').reset();
+            document.getElementById('addQuestionModal').classList.remove('hidden');
+        }
+
+        /**
+         * Close add question modal
+         */
+        function closeAddQuestionModal() {
+            document.getElementById('addQuestionModal').classList.add('hidden');
+        }
+
+        /**
+         * Save edited question to Firestore
+         */
+        function saveEditedQuestion(event) {
+            event.preventDefault();
+            const modal = document.getElementById('editQuestionModal');
+            const questionId = modal.dataset.questionId;
+            
+            const question = window.allSurveyQuestions.find(q => q.id === questionId);
+            if (!question) return;
+
+            const updatedText = document.getElementById('editQuestionText').value;
+            const updatedType = document.getElementById('editQuestionType').value;
+            const updatedRequired = document.getElementById('editQuestionRequired').checked;
+
+            const db = firebase.firestore();
+            db.collection('survey_questions').doc(questionId).update({
+                text: updatedText,
+                type: updatedType,
+                required: updatedRequired
+            }).then(() => {
+                closeEditQuestionModal();
+                alert('Question updated successfully!');
+            }).catch((error) => {
+                console.error('Error updating question:', error);
+                alert('Error updating question: ' + error.message);
+            });
+        }
+
+        /**
+         * Add new question to Firestore
+         */
+        function addNewQuestion(event) {
+            event.preventDefault();
+            
+            const code = document.getElementById('newQuestionCode').value.trim();
+            const text = document.getElementById('newQuestionText').value.trim();
+            const type = document.getElementById('newQuestionType').value;
+            const required = document.getElementById('newQuestionRequired').checked;
+
+            // Validate inputs
+            if (!code || !text) {
+                alert('Code and text are required!');
+                return;
+            }
+
+            // Check if question code already exists
+            if (window.allSurveyQuestions.some(q => q.code === code)) {
+                alert('A question with this code already exists!');
+                return;
+            }
+
+            const db = firebase.firestore();
+            const docId = code.toLowerCase();
+            const maxOrder = window.allSurveyQuestions.length > 0 
+                ? Math.max(...window.allSurveyQuestions.map(q => q.order || 0)) + 1
+                : window.allSurveyQuestions.length;
+            
+            db.collection('survey_questions').doc(docId).set({
+                code: code,
+                text: text,
+                type: type,
+                required: required,
+                order: maxOrder
+            }).then(() => {
+                closeAddQuestionModal();
+                alert('Question added successfully!');
+            }).catch((error) => {
+                console.error('Error adding question:', error);
+                alert('Error adding question: ' + error.message);
+            });
+        }
+
+        /**
+         * Delete question from Firestore
+         */
+        function deleteQuestion(questionId) {
+            const db = firebase.firestore();
+            db.collection('survey_questions').doc(questionId).delete().then(() => {
+                alert('Question deleted successfully!');
+            }).catch((error) => {
+                console.error('Error deleting question:', error);
+                alert('Error deleting question: ' + error.message);
+            });
+        }
+
+        /**
+         * Show confirmation modal
+         * @param {string} title - Modal title
+         * @param {string} message - Modal message
+         * @param {function} onConfirm - Callback when user confirms
+
+         */
+        function showConfirmationModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirmationModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            
+            // Remove old event listeners
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            const newCancelBtn = cancelBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+            
+            // Add new event listeners
+            newConfirmBtn.addEventListener('click', function() {
+                modal.classList.add('hidden');
+                onConfirm();
+            });
+            
+            newCancelBtn.addEventListener('click', function() {
+                modal.classList.add('hidden');
+            });
+            
+            modal.classList.remove('hidden');
+        }
+
+        /**
+         * Export survey responses to CSV format using Firestore data
+         */
+        function exportToCSV() {
+            const responses = window.allSurveyResponses || [];
+            
+            if (responses.length === 0) {
+                alert('No survey data available to export.');
+                return;
+            }
+
+            // Build CSV header
+            let csvContent = 'Timestamp,Office Location,Client Type,Service Availed,SQD Score\n';
+
+            // Add data rows from Firestore
+            responses.forEach(response => {
+                const sq = response.serviceQuality || {};
+                let sqSum = 0, sqCount = 0;
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) { sqSum += v; sqCount += 1; }
+                });
+                const avgSqd = sqCount > 0 ? (sqSum / sqCount).toFixed(2) : 'N/A';
+
+                const submittedAt = response.submittedAt ? new Date(response.submittedAt.toDate ? response.submittedAt.toDate() : response.submittedAt).toLocaleString() : 'N/A';
+                const officeLocation = response.officeLocation || 'N/A';
+                const clientType = response.clientType || 'Unknown';
+                const serviceAvailed = response.serviceAvailed || 'N/A';
+
+                const row = [
+                    `"${submittedAt}"`,
+                    `"${officeLocation}"`,
+                    `"${clientType}"`,
+                    `"${serviceAvailed}"`,
+                    avgSqd
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            // Create and download CSV
+            const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `survey-responses-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /**
+         * Export ARTA Compliance Report as PDF using Firestore data
+         */
+        function exportToPDF() {
+            const responses = window.allSurveyResponses || [];
+            
+            if (responses.length === 0) {
+                alert('No survey data available to generate report.');
+                return;
+            }
+
+            // Calculate metrics from Firestore data
+            let totalSqdSum = 0, totalSqdCount = 0;
+            const serviceMap = {};
+            const clientTypeCounts = { Citizen: 0, Business: 0, Government: 0 };
+
+            responses.forEach(doc => {
+                const sq = doc.serviceQuality || {};
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) {
+                        totalSqdSum += v;
+                        totalSqdCount += 1;
+                    }
+                });
+
+                const svc = (doc.serviceAvailed || 'Unknown').trim() || 'Unknown';
+                if (!serviceMap[svc]) serviceMap[svc] = { count: 0 };
+                serviceMap[svc].count += 1;
+
+                const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
+                if (ctRaw.includes('citizen')) clientTypeCounts.Citizen += 1;
+                else if (ctRaw.includes('business')) clientTypeCounts.Business += 1;
+                else if (ctRaw.includes('government')) clientTypeCounts.Government += 1;
+            });
+
+            const totalResponses = responses.length;
+            const avgSqd = totalSqdCount > 0 ? (totalSqdSum / totalSqdCount).toFixed(1) : 0;
+            let mostAvailed = 'No data';
+            let maxCount = 0;
+            Object.keys(serviceMap).forEach(svc => {
+                if (serviceMap[svc].count > maxCount) {
+                    maxCount = serviceMap[svc].count;
+                    mostAvailed = svc;
+                }
+            });
+
+            const total = totalResponses;
+            const pct = (n) => ((n / total) * 100).toFixed(0);
+            const citizenPct = pct(clientTypeCounts.Citizen);
+            const businessPct = pct(clientTypeCounts.Business);
+            const governmentPct = pct(clientTypeCounts.Government);
+
+            const htmlContent = `
+                <div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h1 style="text-align: center; color: #0b296b;">ARTA Customer Satisfaction Survey</h1>
+                    <h2 style="text-align: center; color: #2563eb;">Compliance Report</h2>
+                    <p style="text-align: center; font-size: 12px; color: #666;">Generated: ${new Date().toLocaleString()}</p>
+                    
+                    <div style="background: #e3f2fd; padding: 10px; border-left: 4px solid #2196f3; margin: 20px 0;">
+                        <strong style="color: #0b296b;">ARTA Compliance Notice:</strong> This report contains official metrics required for ARTA submission.
+                    </div>
+                    
+                    <div style="margin: 20px 0;">
+                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
+                            <strong style="color: #0b296b;">Total Survey Responses:</strong> ${totalResponses}
+                        </div>
+                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
+                            <strong style="color: #0b296b;">Average Satisfaction Score (SQD):</strong> ${avgSqd} / 5
+                        </div>
+                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
+                            <strong style="color: #0b296b;">Most Availed Service:</strong> ${mostAvailed}
+                        </div>
+                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
+                            <strong style="color: #0b296b;">Client Type Distribution:</strong> Citizen ${citizenPct}% | Business ${businessPct}% | Government ${governmentPct}%
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
+                        <p>This report is generated automatically from the ARTA CSS System and follows official ARTA metrics.</p>
+                        <p>For questions or clarifications, contact your ARTA system administrator.</p>
+                    </div>
+                </div>
+            `;
+            
+            const element = document.createElement('div');
+            element.innerHTML = htmlContent;
+            
+            const opt = {
+                margin: 10,
+                filename: `ARTA-Compliance-Report-${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+
+        /**
+         * Generate comprehensive ARTA submission report using Firestore data
+         */
+        function generateComprehensiveReport() {
+            const responses = window.allSurveyResponses || [];
+            
+            if (responses.length === 0) {
+                alert('No survey data available to generate comprehensive report.');
+                return;
+            }
+
+            // Calculate all metrics from Firestore data
+            let totalSqdSum = 0, totalSqdCount = 0;
+            const serviceMap = {};
+            const clientTypeCounts = { Citizen: 0, Business: 0, Government: 0 };
+
+            responses.forEach(doc => {
+                const sq = doc.serviceQuality || {};
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) {
+                        totalSqdSum += v;
+                        totalSqdCount += 1;
+                    }
+                });
+
+                const svc = (doc.serviceAvailed || 'Unknown').trim() || 'Unknown';
+                const sq2 = doc.serviceQuality || {};
+                if (!serviceMap[svc]) serviceMap[svc] = { sumScore: 0, countScore: 0, totalCount: 0 };
+                serviceMap[svc].totalCount += 1;
+                
+                Object.keys(sq2).forEach(k => {
+                    const v = Number(sq2[k]);
+                    if (!isNaN(v)) {
+                        serviceMap[svc].sumScore += v;
+                        serviceMap[svc].countScore += 1;
+                    }
+                });
+
+                const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
+                if (ctRaw.includes('citizen')) clientTypeCounts.Citizen += 1;
+                else if (ctRaw.includes('business')) clientTypeCounts.Business += 1;
+                else if (ctRaw.includes('government')) clientTypeCounts.Government += 1;
+            });
+
+            const totalResponses = responses.length;
+            const avgSqd = totalSqdCount > 0 ? (totalSqdSum / totalSqdCount).toFixed(1) : 0;
+            
+            const total = totalResponses;
+            const pct = (n) => ((n / total) * 100).toFixed(0);
+            const citizenCount = clientTypeCounts.Citizen;
+            const businessCount = clientTypeCounts.Business;
+            const governmentCount = clientTypeCounts.Government;
+            const citizenPct = pct(clientTypeCounts.Citizen);
+            const businessPct = pct(clientTypeCounts.Business);
+            const governmentPct = pct(clientTypeCounts.Government);
+
+            // Build service table rows dynamically
+            let serviceTableRows = '';
+            let rowIndex = 0;
+            Object.keys(serviceMap).forEach(svc => {
+                const service = serviceMap[svc];
+                const avgScore = service.countScore > 0 ? (service.sumScore / service.countScore).toFixed(1) : 0;
+                const bgColor = rowIndex % 2 === 0 ? '' : 'background: #f9f9f9;';
+                serviceTableRows += `<tr style="${bgColor}"><td style="padding: 10px; border-bottom: 1px solid #ddd;">${svc}</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${service.totalCount}</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${avgScore}/5</td></tr>`;
+                rowIndex++;
+            });
+
+            const htmlContent = `
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; background: white;">
+                    <div style="text-align: center; border-bottom: 3px solid #0b296b; padding-bottom: 20px; margin-bottom: 30px;">
+                        <h1 style="font-size: 32px; font-weight: bold; color: #0b296b; margin: 0;">ARTA Customer Satisfaction Survey</h1>
+                        <h2 style="font-size: 18px; color: #2563eb; margin: 5px 0;">Comprehensive Compliance Report</h2>
+                        <p style="font-size: 12px; color: #666; margin: 5px 0;">Generated: ${new Date().toLocaleString()}</p>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <h3 style="font-size: 18px; font-weight: bold; color: #0b296b; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 10px;">Executive Summary</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                <div style="font-size: 13px; color: #666; font-weight: 500;">Total Responses</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #0b296b; margin-top: 8px;">${totalResponses}</div>
+                            </div>
+                            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                <div style="font-size: 13px; color: #666; font-weight: 500;">Average Satisfaction (SQD)</div>
+                                <div style="font-size: 24px; font-weight: bold; color: #0b296b; margin-top: 8px;">${avgSqd}/5</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <h3 style="font-size: 18px; font-weight: bold; color: #0b296b; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 10px;">Client Type Distribution</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <thead>
+                                <tr style="background: #0b296b; color: white;">
+                                    <th style="padding: 12px; text-align: left;">Client Type</th>
+                                    <th style="padding: 12px; text-align: left;">Count</th>
+                                    <th style="padding: 12px; text-align: left;">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #ddd;">Citizen</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${citizenCount}</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${citizenPct}%</td></tr>
+                                <tr style="background: #f9f9f9;"><td style="padding: 10px; border-bottom: 1px solid #ddd;">Business</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${businessCount}</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${businessPct}%</td></tr>
+                                <tr><td style="padding: 10px; border-bottom: 1px solid #ddd;">Government</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${governmentCount}</td><td style="padding: 10px; border-bottom: 1px solid #ddd;">${governmentPct}%</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <h3 style="font-size: 18px; font-weight: bold; color: #0b296b; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 10px;">Service Performance Analysis</h3>
+                        <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                            <thead>
+                                <tr style="background: #0b296b; color: white;">
+                                    <th style="padding: 12px; text-align: left;">Service Name</th>
+                                    <th style="padding: 12px; text-align: left;">Responses</th>
+                                    <th style="padding: 12px; text-align: left;">Average SQD Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${serviceTableRows}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin: 30px 0;">
+                        <h3 style="font-size: 18px; font-weight: bold; color: #0b296b; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 10px;">Recommendations for Improvement</h3>
+                        <div style="padding: 10px; margin: 8px 0; background: #e3f2fd; border-left: 4px solid #2196f3;">✓ Maintain high service quality standards for all services</div>
+                        <div style="padding: 10px; margin: 8px 0; background: #e3f2fd; border-left: 4px solid #2196f3;">✓ Analyze low-performing services and implement improvements</div>
+                        <div style="padding: 10px; margin: 8px 0; background: #e3f2fd; border-left: 4px solid #2196f3;">✓ Continue engaging with citizen feedback for service improvement</div>
+                    </div>
+
+                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
+                        <p><strong>Report Compliance Status:</strong> ARTA-Compliant</p>
+                        <p>This report is automatically generated by the ARTA CSS System and meets all official ARTA submission standards.</p>
+                    </div>
+                </div>
+            `;
+            
+            const element = document.createElement('div');
+            element.innerHTML = htmlContent;
+            
+            const opt = {
+                margin: 10,
+                filename: `ARTA-Comprehensive-Report-${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+        // Add Question Button
+        const addQuestionBtn = document.getElementById('addQuestionBtn');
+        if (addQuestionBtn) {
+            addQuestionBtn.addEventListener('click', function() {
+                openAddQuestionModal();
+            });
+        }
+
+        // Setup Questions Button - Load default survey questions
+        const setupQuestionsBtn = document.getElementById('setupQuestionsBtn');
+        if (setupQuestionsBtn) {
+            setupQuestionsBtn.addEventListener('click', function() {
+                if (confirm('This will load all default ARTA survey questions into Firestore. Existing questions will be skipped. Continue?')) {
+                    initializeDefaultSurveyQuestions();
+                }
+            });
+        }
+
+        // Edit Question Form Submission
+        const editQuestionForm = document.getElementById('editQuestionForm');
+        if (editQuestionForm) {
+            editQuestionForm.addEventListener('submit', saveEditedQuestion);
+        }
+
+        // Close Edit Modal Button
+        const closeEditModal = document.getElementById('closeEditModal');
+        if (closeEditModal) {
+            closeEditModal.addEventListener('click', closeEditQuestionModal);
+        }
+
+        // Add Question Form Submission
+        const addQuestionForm = document.getElementById('addQuestionForm');
+        if (addQuestionForm) {
+            addQuestionForm.addEventListener('submit', addNewQuestion);
+        }
+
+        // Close Add Modal Button
+        const closeAddModal = document.getElementById('closeAddModal');
+        if (closeAddModal) {
+            closeAddModal.addEventListener('click', closeAddQuestionModal);
+        }
+
         // --- Event Listeners ---
         
         // 1. Login Form Submission
@@ -1034,10 +1789,55 @@
             }
         });
 
+        // 7. Export CSV Button
+        const exportAllCsvBtn = document.getElementById('exportAllCsvBtn');
+        if (exportAllCsvBtn) {
+            exportAllCsvBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                showConfirmationModal(
+                    'Export Survey Data',
+                    'This will download all survey responses as a CSV file. Do you want to proceed?',
+                    exportToCSV
+                );
+            });
+        }
+
+        // 8. Download PDF Button
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                showConfirmationModal(
+                    'Generate ARTA Compliance Report',
+                    'This will generate the ARTA Compliance Report as a PDF. Do you want to proceed?',
+                    exportToPDF
+                );
+            });
+        }
+
+        // 9. Generate Comprehensive Report Button
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        if (generateReportBtn) {
+            generateReportBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                showConfirmationModal(
+                    'Generate Comprehensive ARTA Report',
+                    'This will create a comprehensive ARTA submission report. Do you want to proceed?',
+                    generateComprehensiveReport
+                );
+            });
+        }
+
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             // Show login view by default (do not bypass login)
             toggleAppView(true);
+            
+            // Initialize survey questions from Firestore with real-time listener
+            initializeSurveyQuestionsFromFirestore();
+            
+            // Load default questions if Firestore is empty (first time setup)
+            loadDefaultQuestionsToFirestore();
         });
 
         // Ensure lucide icons are created on first load for the login view
