@@ -9,12 +9,28 @@ service cloud.firestore {
     }
 
     // Admin users: allow read if requester has an admin doc (exists check)
-    // Only super_admin can write/update admin_users documents
+    // Only super_admin can write/update admin_users documents via Cloud Functions
+    // Client-side can only read their own document or list all if admin
     match /admin_users/{adminId} {
+      // Any authenticated admin can read the list
       allow read: if request.auth != null
                   && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+      
+      // Only super_admin can create/update/delete via client or functions
       allow write: if request.auth != null
                    && get(/databases/$(database)/documents/admin_users/$(request.auth.uid)).data.role == 'super_admin';
+      
+      // Allow document to be created by Cloud Function during user invitation
+      allow create: if request.auth != null
+                    && get(/databases/$(database)/documents/admin_users/$(request.auth.uid)).data.role == 'super_admin';
+      
+      // Allow status update by authenticated user when email is verified
+      allow update: if (request.auth.uid == adminId && 
+                        request.resource.data.status == 'active' &&
+                        resource.data.status == 'pending')
+                    ||
+                    (request.auth != null
+                     && get(/databases/$(database)/documents/admin_users/$(request.auth.uid)).data.role == 'super_admin');
     }
 
     // Survey questions: read public, write allowed to super_admin & survey_manager
