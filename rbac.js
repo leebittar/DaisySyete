@@ -8,7 +8,7 @@
 
 (function () {
   const ROLE_ALLOWED_VIEWS = {
-    'super_admin': ['dashboard','raw-responses','compliance-reports','manage-questions','user-management','system-settings','add-user-form'],
+    'super_admin': ['dashboard','raw-responses','compliance-reports','manage-questions','user-management','add-user-form'],
     'admin': ['dashboard','user-management','manage-questions','compliance-reports','add-user-form'],
     'data_analyst': ['dashboard','raw-responses','compliance-reports'],
     'survey_manager': ['dashboard','manage-questions']
