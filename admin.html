@@ -48,6 +48,28 @@
         .status-active { background-color: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
         .status-pending { background-color: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
 
+        /* Loader overlay styles */
+        .loader-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 9999; }
+        .loader-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+        .loader-spinner { width: 48px; height: 48px; border-radius: 9999px; border: 6px solid rgba(0,0,0,0.08); border-top-color: #2563EB; animation: ds-spin 1s linear infinite; }
+        @keyframes ds-spin { to { transform: rotate(360deg); } }
+        .loader-text { color: #0f172a; font-weight: 600; }
+
+        /* Modal styles */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+        .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 0.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); z-index: 50; max-width: 28rem; width: 90%; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid #e5e7eb; font-size: 1.125rem; font-weight: 700; color: #111827; }
+        .modal-body { padding: 1.5rem; color: #374151; line-height: 1.5; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.75rem; justify-content: flex-end; }
+        .modal-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid transparent; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .modal-btn-primary { background: #2563EB; color: white; }
+        .modal-btn-primary:hover { background: #1d4ed8; }
+        .modal-btn-secondary { background: #e5e7eb; color: #111827; }
+        .modal-btn-secondary:hover { background: #d1d5db; }
+        .modal-btn-danger { background: #dc2626; color: white; }
+        .modal-btn-danger:hover { background: #b91c1c; }
+        .hidden-modal { display: none !important; }
+
     </style>
     <!-- Libraries for data export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
@@ -76,12 +98,13 @@
                             <div>
                                 <label for="email" class="block text-lg font-medium text-gray-700">Email:</label>
                                 <div class="mt-2 relative rounded-xl shadow-md">
-                                    <input type="email" id="email" name="email" required placeholder="e.g. juan_delacruz@gmail.com"
+                                    <input type="email" id="email" name="email" required placeholder="youremail@email.com"
                                            class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 pr-12">
                                     <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400">
                                         <i data-lucide="mail" class="w-5 h-5"></i>
                                     </span>
                                 </div>
+                                <div id="emailError" class="text-red-600 text-sm mt-1 hidden"></div>
                             </div>
                             <div>
                                 <label for="password" class="block text-lg font-medium text-gray-700">Password:</label>
@@ -92,13 +115,14 @@
                                         <i data-lucide="lock" class="w-5 h-5"></i>
                                     </span>
                                 </div>
+                                <div id="passwordError" class="text-red-600 text-sm mt-1 hidden"></div>
                                 <div class="text-sm mt-2 text-right">
-                                    <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                    <button type="button" id="forgotPasswordLink" class="text-sm font-medium text-blue-600 hover:text-blue-500 bg-transparent border-none cursor-pointer">
                                         Forgot password?
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
-                            <div id="loginError" class="text-red-600 text-center hidden">Invalid email or password.</div>
+                            <div id="loginError" class="text-red-600 text-center hidden"></div>
                             <div class="pt-4">
                                 <button type="submit"
                                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-xl text-lg font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
@@ -126,13 +150,21 @@
                     </div>
                     <h1 class="text-xl font-semibold text-gray-800 hidden md:block">ARTA Customer Satisfaction Survey Dashboard</h1>
                 </div>
-                <div class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition duration-150">
-                    <div class="w-10 h-10 p-2 rounded-full flex-shrink-0">
-                         <img src="Admin Side/Nav Admin/admin.png" alt="" class="w-full h-full object-contain">
+                <div id="userMenu" class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition duration-150">
+                        <div class="w-10 h-10 p-2 rounded-full flex-shrink-0">
+                             <img src="Admin Side/Nav Admin/admin.png" alt="" class="w-full h-full object-contain">
+                        </div>
+                        <span class="hidden sm:inline font-medium text-gray-700">Admin</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
+                    </button>
+
+                    <div id="userDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md z-50 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                        </div>
                     </div>
-                    <span class="hidden sm:inline font-medium text-gray-700">Admin</span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
-                    </div>
+                </div>
             </header>
 
             <div class="flex flex-grow pt-20">
@@ -244,30 +276,104 @@
                         <h2 class="text-3xl font-extrabold text-gray-900">Raw Response Data</h2>
                         <p class="text-gray-500 mt-1 mb-6">Includes all submissions, integrating data from survey platforms.</p>
                         
+                        <!-- Inline Filter Section -->
                         <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
-                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-150 ease-in-out">
-                                Filter Data
-                            </button>
+                            <div class="mb-4 flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900">Filter Responses</h3>
+                                <div id="filterStatusBadge" class="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-lg hidden border border-blue-300">
+                                    <span id="filterStatusText"></span>
+                                </div>
+                            </div>
+                            
+                            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                                <!-- Date Range Start -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                    <input type="date" id="filterStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                </div>
+                                
+                                <!-- Date Range End -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                    <input type="date" id="filterEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                </div>
+                                
+                                <!-- Region of Residence -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                                    <select id="filterRegion" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">All Regions</option>
+                                        <option value="Region I - Ilocos Region">Region I - Ilocos Region</option>
+                                        <option value="Region II - Cagayan Valley">Region II - Cagayan Valley</option>
+                                        <option value="Region III - Central Luzon">Region III - Central Luzon</option>
+                                        <option value="Region IV-A - CALABARZON">Region IV-A - CALABARZON</option>
+                                        <option value="Region IV-B - MIMAROPA">Region IV-B - MIMAROPA</option>
+                                        <option value="Region V - Bicol Region">Region V - Bicol Region</option>
+                                        <option value="Region VI - Western Visayas">Region VI - Western Visayas</option>
+                                        <option value="Region VII - Central Visayas">Region VII - Central Visayas</option>
+                                        <option value="Region VIII - Eastern Visayas">Region VIII - Eastern Visayas</option>
+                                        <option value="Region IX - Zamboanga Peninsula">Region IX - Zamboanga Peninsula</option>
+                                        <option value="Region X - Northern Mindanao">Region X - Northern Mindanao</option>
+                                        <option value="Region XI - Davao Region">Region XI - Davao Region</option>
+                                        <option value="Region XII - Soccsksargen">Region XII - Soccsksargen</option>
+                                        <option value="Region XIII - Caraga">Region XIII - Caraga</option>
+                                        <option value="BARMM - Bangsamoro Autonomous Region">BARMM - Bangsamoro Autonomous Region</option>
+                                        <option value="NCR - National Capital Region">NCR - National Capital Region</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Client Type -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Client Type</label>
+                                    <select id="filterClientType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">All Types</option>
+                                        <option value="citizen">Citizen</option>
+                                        <option value="business">Business</option>
+                                        <option value="OFW">OFW</option>
+                                        <option value="government">Government</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Min Score -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Min Score</label>
+                                    <input type="number" id="filterMinScore" min="0" max="5" step="0.1" placeholder="0.0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                                </div>
+                            </form>
+                            
+                            <!-- Filter Buttons -->
+                            <div class="flex gap-2">
+                                <button type="button" id="clearFiltersBtn" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded-lg transition duration-150 ease-in-out flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Clear Filters
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="overflow-x-auto bg-white rounded-xl shadow-lg p-4">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE/TIME</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OFFICE/LOCATION</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CLIENT/TYPE</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SQD SCORE (Avg)</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">CITIZEN CHARTER AWARE</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    <tr class="hover:bg-gray-50">
-                                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Loading data from Firestore...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <!-- Scrollable Table Container -->
+                        <div class="bg-white rounded-xl shadow-lg">
+                            <div class="overflow-x-auto" style="max-height: 600px; overflow-y: auto;">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE/TIME</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">REGION OF RESIDENCE</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CLIENT/TYPE</th>
+                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SQD SCORE (Avg)</th>
+                                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">CITIZEN CHARTER AWARE</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="raw-responses-tbody" class="divide-y divide-gray-200">
+                                        <tr class="hover:bg-gray-50">
+                                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Loading data from Firestore...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="bg-gray-50 px-6 py-3 border-t border-gray-200 text-sm text-gray-600">
+                                Showing <span id="totalRecords">0</span> records
+                            </div>
                         </div>
                     </div>
 
@@ -331,8 +437,10 @@
                             </div>
                         </div>
 
-                        <div id="questionsContainer" class="space-y-4">
-                            <!-- Questions will be dynamically loaded here -->
+                        <div id="questionsContainerWrapper" class="max-h-[60vh] overflow-y-auto pr-3">
+                            <div id="questionsContainer" class="space-y-4">
+                                <!-- Questions will be dynamically loaded here -->
+                            </div>
                         </div>
 
                         <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-600 mt-6">
@@ -363,26 +471,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Jhairon Clarence</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">clarence@gmail.com</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Admin</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="status-active">Active</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                            <button class="text-blue-600 hover:text-blue-800"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
-                                            <button class="text-red-600 hover:text-red-800"><i data-lucide="trash" class="w-5 h-5"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Admin User 2</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">admin2@arta.gov</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Admin</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="status-pending">Pending</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                            <button class="text-blue-600 hover:text-blue-800"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
-                                            <button class="text-red-600 hover:text-red-800"><i data-lucide="trash" class="w-5 h-5"></i></button>
-                                        </td>
-                                    </tr>
+                                    <!-- Admin users loaded from Firestore dynamically -->
                                 </tbody>
                             </table>
                         </div>
@@ -458,8 +547,8 @@
                                                         class="w-full px-5 py-3 appearance-none border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 cursor-pointer pr-12 bg-white">
                                                     <option value="" disabled selected>Select a role</option>
                                                     <option value="admin">Admin</option>
-                                                    <option value="data analyst">Data Analyst</option>
-                                                    <option value="survey manager">Survey Manager</option>
+                                                    <option value="data_analyst">Data Analyst</option>
+                                                    <option value="survey_manager">Survey Manager</option>
                                                 </select>
                                                 <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400 pointer-events-none">
                                                     <i data-lucide="chevron-down" class="w-5 h-5"></i>
@@ -624,7 +713,9 @@
     <script type="module">
         // --- Firestore Integration ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where, getDocs, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-functions.js";
         
         // Firebase Configuration
         const firebaseConfig = {
@@ -640,11 +731,29 @@
         // Initialize Firebase
         const firebaseApp = initializeApp(firebaseConfig);
         const db = getFirestore(firebaseApp);
+        const auth = getAuth(firebaseApp);
+        const functions = getFunctions(firebaseApp, 'us-central1');
+
+        console.log('[admin.html] Firebase initialized, project:', firebaseConfig.projectId);
 
         // Store Firestore references globally for use in other scripts
         window.db = db;
         window.collection = collection;
         window.onSnapshot = onSnapshot;
+        window.getDocs = getDocs;
+        window.getDoc = getDoc;
+        window.query = query;
+        window.where = where;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.deleteDoc = deleteDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.auth = auth;
+        window.functions = functions;
+        window.httpsCallable = httpsCallable;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.sendEmailVerification = sendEmailVerification;
+        window.FIREBASE_API_KEY = firebaseConfig.apiKey;
         window.allSurveyResponses = []; // Store all responses for export functions
 
         // Helper function to safely update DOM elements
@@ -657,6 +766,111 @@
             }
         }
 
+        // --- ADMIN AUTHENTICATION ---
+        // Function to validate admin credentials against Firestore
+        async function validateAdminLogin(email, password) {
+            try {
+                // First try to sign in with Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+
+                // Primary check: try to read admin document by UID (this matches security rules
+                // that require admin_documents to be keyed by the user's UID).
+                try {
+                    const adminDocRef = doc(db, 'admin_users', user.uid);
+                    const adminDocSnap = await getDoc(adminDocRef);
+                    if (adminDocSnap.exists()) {
+                        const adminData = adminDocSnap.data();
+                        
+                        // Check email verification status - REQUIRED for all roles EXCEPT super_admin
+                        if (!user.emailVerified && adminData.role !== 'super_admin') {
+                            return { success: false, message: 'Please verify your email before logging in. Check your inbox for the verification link.' };
+                        }
+                        
+                        // Update status to 'active' if email is now verified and status is still 'pending'
+                        if (user.emailVerified && adminData.status === 'pending') {
+                            await setDoc(adminDocRef, { status: 'active' }, { merge: true });
+                        }
+                        
+                        return {
+                            success: true,
+                            user: {
+                                email: user.email,
+                                uid: user.uid,
+                                role: adminData.role || 'admin',
+                                first_name: adminData.first_name || '',
+                                last_name: adminData.last_name || '',
+                                name: `${adminData.first_name || ''} ${adminData.last_name || ''}`.trim() || 'Admin User',
+                                permissions: adminData.permissions || []
+                            }
+                        };
+                    }
+                } catch (uidErr) {
+                    // Log and continue to fallback query by email
+                    console.warn('UID lookup failed or blocked by rules, will fallback to email query', uidErr && uidErr.code ? uidErr.code : uidErr);
+                }
+
+                // Fallback: some projects store admin documents keyed by auto-id or email
+                // Query admin_users collection by email as a fallback (may be blocked by strict rules)
+                const adminUsersRef = collection(db, "admin_users");
+                const q = query(adminUsersRef, where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    console.warn("User not found in admin_users collection");
+                    return { success: false, message: "You are not authorized as an admin." };
+                }
+
+                const adminData = querySnapshot.docs[0].data();
+                
+                // Check email verification status - REQUIRED for all roles EXCEPT super_admin
+                if (!user.emailVerified && adminData.role !== 'super_admin') {
+                    return { success: false, message: 'Please verify your email before logging in. Check your inbox for the verification link.' };
+                }
+
+                return {
+                    success: true,
+                    user: {
+                        email: user.email,
+                        uid: user.uid,
+                        role: adminData.role || "admin",
+                        first_name: adminData.first_name || '',
+                        last_name: adminData.last_name || '',
+                        name: `${adminData.first_name || ''} ${adminData.last_name || ''}`.trim() || 'Admin User',
+                        permissions: adminData.permissions || []
+                    }
+                };
+            } catch (error) {
+                console.error("Login error:", error && error.code ? error.code : error, error && error.message ? error.message : error);
+
+                // Map known Firebase error codes to user-friendly messages
+                if (error && error.code) {
+                    switch(error.code) {
+                        case "auth/invalid-email":
+                            return { success: false, message: "Invalid email format." };
+                        case "auth/user-disabled":
+                            return { success: false, message: "This account has been disabled." };
+                        case "auth/user-not-found":
+                            return { success: false, message: "Email not found. Invalid credentials." };
+                        case "auth/wrong-password":
+                            return { success: false, message: "Incorrect password." };
+                        case "auth/too-many-requests":
+                            return { success: false, message: "Too many failed login attempts. Try again later." };
+                        case "permission-denied":
+                            return { success: false, message: "Server permission denied when checking admin role. Verify Firestore rules and admin_users document ID (should be the user UID)." };
+                        default:
+                            return { success: false, message: "Invalid email or password." };
+                    }
+                }
+
+                return { success: false, message: "Invalid email or password." };
+            }
+        }
+
+        // Expose the function to non-module scripts (login handler in plain <script> needs access)
+        window.validateAdminLogin = validateAdminLogin;
+
         // Initialize real-time listeners with a slight delay to ensure DOM is ready
         setTimeout(() => {
             const surveyResponsesRef = collection(db, "survey_responses");
@@ -668,15 +882,15 @@
                     responses.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Store responses globally for export functions
+                // Store responses globally for export functions and filtering
                 window.allSurveyResponses = responses;
+                setResponsesToFilter(responses);
                 
                 console.log('Firestore data received:', responses);
                 
                 // Update metrics with aggregated data
                 updateMetrics(responses);
                 updateCharts(responses);
-                updateResponsesTable(responses);
             }, (error) => {
                 console.error('Firestore listener error:', error);
             });
@@ -830,7 +1044,7 @@
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${String(index + 1).padStart(3, '0')}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${submittedAt}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${doc.officeLocation || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${doc.regionOfResidence || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${isCitizen ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">
                             ${doc.clientType || 'Unknown'}
@@ -853,12 +1067,190 @@
         window.updateMetrics = updateMetrics;
         window.updateCharts = updateCharts;
         window.updateResponsesTable = updateResponsesTable;
+
+        /**
+         * FILTERING SYSTEM FOR RAW RESPONSES
+         * Client-side filtering to avoid Firestore index requirements
+         */
+
+        let allResponses = []; // Store all responses for filtering
+
+        // Render all filtered responses in scrollable table
+        function renderFilteredTable(responses) {
+            const tableBody = document.getElementById('raw-responses-tbody');
+            if (!tableBody) return;
+
+            document.getElementById('totalRecords').textContent = responses.length;
+
+            if (responses.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No responses match your filters</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            responses.forEach((doc, idx) => {
+                const sq = doc.serviceQuality || {};
+                let sqSum = 0, sqCount = 0;
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) { sqSum += v; sqCount += 1; }
+                });
+                const avgSqd = sqCount > 0 ? (sqSum / sqCount) : 0;
+
+                const submittedAt = doc.submittedAt ? new Date(doc.submittedAt.toDate ? doc.submittedAt.toDate() : doc.submittedAt).toLocaleString() : 'N/A';
+                const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
+                const isCitizen = ctRaw.includes('citizen');
+                const ccAwere = doc.citizensCharter && doc.citizensCharter.cc1 !== '4' ? 'Yes' : 'No';
+
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${String(idx + 1).padStart(3, '0')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${submittedAt}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${doc.regionOfResidence || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${isCitizen ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}">
+                            ${doc.clientType || 'Unknown'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        <span class="score-cell ${avgSqd >= 4.5 ? 'score-5' : 'score-4'}">
+                            ${avgSqd.toFixed(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center ${ccAwere === 'Yes' ? 'text-blue-600' : 'text-red-600'} font-semibold">
+                        ${ccAwere}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Apply filters from form
+        async function applyFilters() {
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const region = document.getElementById('filterRegion').value;
+            const clientType = document.getElementById('filterClientType').value;
+            const minScore = parseFloat(document.getElementById('filterMinScore').value) || 0;
+
+            let filtered = allResponses.filter(doc => {
+                // Date range filter
+                if (startDate) {
+                    const filterDate = new Date(startDate);
+                    const docDate = doc.submittedAt ? new Date(doc.submittedAt.toDate ? doc.submittedAt.toDate() : doc.submittedAt) : null;
+                    if (!docDate || docDate < filterDate) return false;
+                }
+                if (endDate) {
+                    const filterDate = new Date(endDate);
+                    filterDate.setHours(23, 59, 59, 999);
+                    const docDate = doc.submittedAt ? new Date(doc.submittedAt.toDate ? doc.submittedAt.toDate() : doc.submittedAt) : null;
+                    if (!docDate || docDate > filterDate) return false;
+                }
+
+                // Region filter
+                if (region && doc.regionOfResidence !== region) return false;
+
+                // Client type filter
+                if (clientType) {
+                    const responseType = (doc.clientType || '').toLowerCase();
+                    if (!responseType.includes(clientType.toLowerCase())) return false;
+                }
+
+                // Score filter
+                const sq = doc.serviceQuality || {};
+                let sqSum = 0, sqCount = 0;
+                Object.keys(sq).forEach(k => {
+                    const v = Number(sq[k]);
+                    if (!isNaN(v)) { sqSum += v; sqCount += 1; }
+                });
+                const avgScore = sqCount > 0 ? (sqSum / sqCount) : 0;
+                if (avgScore < minScore) return false;
+
+                return true;
+            });
+
+            renderFilteredTable(filtered);
+            updateFilterBadge();
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('filterForm').reset();
+            document.getElementById('filterStatusBadge').classList.add('hidden');
+            renderFilteredTable(allResponses);
+        }
+
+        // Update filter status badge
+        function updateFilterBadge() {
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const region = document.getElementById('filterRegion').value;
+            const clientType = document.getElementById('filterClientType').value;
+            const minScore = document.getElementById('filterMinScore').value;
+
+            const activeFilters = [];
+            if (startDate || endDate) activeFilters.push('Date');
+            if (region) activeFilters.push('Region');
+            if (clientType) activeFilters.push('Type');
+            if (minScore && parseFloat(minScore) > 0) activeFilters.push('Score');
+
+            if (activeFilters.length > 0) {
+                document.getElementById('filterStatusText').textContent = `${activeFilters.length} filter(s) active`;
+                document.getElementById('filterStatusBadge').classList.remove('hidden');
+            } else {
+                document.getElementById('filterStatusBadge').classList.add('hidden');
+            }
+        }
+
+        // Event listeners for automatic filtering
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterForm = document.getElementById('filterForm');
+            const clearBtn = document.getElementById('clearFiltersBtn');
+
+            // Get all filter inputs
+            const filterInputs = [
+                document.getElementById('filterStartDate'),
+                document.getElementById('filterEndDate'),
+                document.getElementById('filterRegion'),
+                document.getElementById('filterClientType'),
+                document.getElementById('filterMinScore')
+            ];
+
+            // Add event listeners to all filter inputs
+            filterInputs.forEach(input => {
+                if (input) {
+                    input.addEventListener('change', () => {
+                        applyFilters();
+                    });
+                    input.addEventListener('input', () => {
+                        applyFilters();
+                    });
+                }
+            });
+
+            // Clear filters button
+            if (clearBtn) {
+                clearBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    clearFilters();
+                });
+            }
+        });
+
+        // Store responses globally for filtering
+        function setResponsesToFilter(responses) {
+            allResponses = responses || [];
+            renderFilteredTable(allResponses);
+        }
+
+        window.setResponsesToFilter = setResponsesToFilter;
     </script>
 
     <script>
         // --- Configuration ---
         const SUPER_ADMIN_EMAIL = 'super@admin.com';
-        const SUPER_ADMIN_PASSWORD = 'password123';
+        const SUPER_ADMIN_PASSWORD = 'SuperAdmin@2024!';
         
         // --- Element Selection ---
         const app = document.getElementById('app');
@@ -874,6 +1266,108 @@
         const showAddUserBtn = document.getElementById('showAddUserBtn'); // NEW
         const addUserForm = document.getElementById('addUserForm'); // NEW
         const goBackBtn = document.getElementById('goBackBtn'); // NEW
+
+        // Loading overlay for login (reusable spinner)
+        let loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.className = 'loader-overlay';
+        loadingOverlay.innerHTML = '<div class="loader-wrap"><div class="loader-spinner" aria-hidden="true"></div><div class="loader-text" id="loaderText">Loading…</div></div>';
+
+        function showLoader(text = 'Loading…') {
+            try {
+                const txt = loadingOverlay.querySelector('#loaderText');
+                if (txt) txt.textContent = text;
+            } catch (e) { /* ignore */ }
+            if (!document.body.contains(loadingOverlay)) document.body.appendChild(loadingOverlay);
+            loadingOverlay.style.display = 'flex';
+        }
+        function hideLoader() {
+            try {
+                loadingOverlay.style.display = 'none';
+                if (document.body.contains(loadingOverlay)) document.body.removeChild(loadingOverlay);
+            } catch (e) { /* ignore */ }
+        }
+
+        // User dropdown behavior
+        document.addEventListener('click', function(e) {
+            const userDropdown = document.getElementById('userDropdown');
+            if (!userDropdown) return;
+            // If click is outside the user menu, hide the dropdown
+            const userMenu = document.getElementById('userMenu');
+            if (userMenu && !userMenu.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+
+        // Modal helper functions
+        function showModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.remove('hidden-modal'); }
+        function hideModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.add('hidden-modal'); }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Forgot password modal
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showModal('forgotPasswordModal');
+                });
+            }
+            const closeForgotPasswordModal = document.getElementById('closeForgotPasswordModal');
+            if (closeForgotPasswordModal) {
+                closeForgotPasswordModal.addEventListener('click', function() { hideModal('forgotPasswordModal'); });
+            }
+            const forgotPasswordBackdrop = document.getElementById('forgotPasswordBackdrop');
+            if (forgotPasswordBackdrop) {
+                forgotPasswordBackdrop.addEventListener('click', function() { hideModal('forgotPasswordModal'); });
+            }
+
+            // User menu and logout
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenuButton && userDropdown) {
+                userMenuButton.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+            }
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showModal('logoutConfirmModal');
+                });
+            }
+
+            // Logout confirmation modal
+            const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+            if (cancelLogoutBtn) {
+                cancelLogoutBtn.addEventListener('click', function() { hideModal('logoutConfirmModal'); });
+            }
+            const logoutConfirmBackdrop = document.getElementById('logoutConfirmBackdrop');
+            if (logoutConfirmBackdrop) {
+                logoutConfirmBackdrop.addEventListener('click', function() { hideModal('logoutConfirmModal'); });
+            }
+            const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+            if (confirmLogoutBtn) {
+                confirmLogoutBtn.addEventListener('click', function() {
+                    // Perform actual logout
+                    function _finalize() { try { localStorage.clear(); } catch (e) {} window.location.reload(); }
+                    try {
+                        if (window.auth && typeof window.signOut === 'function') {
+                            window.signOut(window.auth).then(_finalize).catch(_finalize);
+                            return;
+                        }
+                    } catch(e){}
+                    try {
+                        if (window.firebase && window.firebase.auth) {
+                            window.firebase.auth().signOut().then(_finalize).catch(_finalize);
+                            return;
+                        }
+                    } catch(e){}
+                    _finalize();
+                });
+            }
+        });
 
         let currentView = 'dashboard';
 
@@ -979,10 +1473,21 @@
                 if (viewId === 'dashboard') {
                     initCharts();
                 }
-                
+
                 // Special case: Load questions on manage-questions load
                 if (viewId === 'manage-questions') {
-                    loadSurveyQuestions();
+                    // Ensure defaults exist, then render questions (ensures automatic population)
+                    ensureDefaultQuestionsExist().then(() => {
+                        loadSurveyQuestions();
+                    }).catch((e) => {
+                        console.warn('ensureDefaultQuestionsExist failed:', e);
+                        loadSurveyQuestions();
+                    });
+                }
+
+                // Special case: Load admin users on user-management load
+                if (viewId === 'user-management') {
+                    try { loadAdminUsers(); } catch (e) { console.warn('Could not start admin_users listener on navigation', e); }
                 }
             }
 
@@ -1014,6 +1519,15 @@
                 loginView.classList.add('hidden');
                 dashboardView.classList.remove('hidden');
                 navigateTo('dashboard'); // Default to dashboard home
+                // Ensure charts are initialized and updated after login
+                setTimeout(() => {
+                    if (typeof window.updateMetrics === 'function' && window.allSurveyResponses) {
+                        window.updateMetrics(window.allSurveyResponses);
+                    }
+                    if (typeof window.updateCharts === 'function' && window.allSurveyResponses) {
+                        window.updateCharts(window.allSurveyResponses);
+                    }
+                }, 200);
             } else {
                 dashboardView.classList.add('hidden');
                 loginView.classList.remove('hidden');
@@ -1083,30 +1597,127 @@
          * Initialize survey questions from Firestore with real-time listener
          */
         function initializeSurveyQuestionsFromFirestore() {
-            const db = firebase.firestore();
-            const questionsRef = db.collection('survey_questions');
-
-            // Real-time listener for questions
-            questionsRef.orderBy('order', 'asc').onSnapshot((snapshot) => {
-                window.allSurveyQuestions = [];
-                snapshot.forEach((doc) => {
-                    window.allSurveyQuestions.push({
-                        id: doc.id,
-                        code: doc.data().code || '',
-                        text: doc.data().text || '',
-                        type: doc.data().type || 'SQD',
-                        required: doc.data().required || true,
-                        order: doc.data().order || 0
-                    });
-                });
-                console.log('Questions synced from Firestore:', window.allSurveyQuestions.length);
-                // Refresh UI if manage-questions tab is active
-                if (document.getElementById('manage-questions') && !document.getElementById('manage-questions').classList.contains('hidden')) {
-                    loadSurveyQuestions();
+            try {
+                if (!window.db || !window.collection || !window.onSnapshot) {
+                    console.warn('Firestore modular APIs not yet available for initializeSurveyQuestionsFromFirestore');
+                    return;
                 }
-            }, (error) => {
-                console.error('Error loading questions:', error);
-            });
+
+                const questionsRef = window.collection(window.db, 'survey_questions');
+
+                // Real-time listener for questions (use modular onSnapshot)
+                window.onSnapshot(questionsRef, (snapshot) => {
+                    window.allSurveyQuestions = [];
+                    snapshot.forEach((docSnap) => {
+                        const data = typeof docSnap.data === 'function' ? docSnap.data() : (docSnap.data || {});
+                        window.allSurveyQuestions.push({
+                            id: docSnap.id,
+                            code: data.code || '',
+                            text: data.text || '',
+                            type: data.type || 'SQD',
+                            required: typeof data.required === 'boolean' ? data.required : true,
+                            order: typeof data.order === 'number' ? data.order : 0
+                        });
+                    });
+
+                    // Ensure deterministic ordering
+                    window.allSurveyQuestions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                    console.log('Questions synced from Firestore:', window.allSurveyQuestions.length);
+
+                    // Refresh UI if manage-questions tab is active
+                    if (document.getElementById('manage-questions') && !document.getElementById('manage-questions').classList.contains('hidden')) {
+                        loadSurveyQuestions();
+                    }
+                }, (error) => {
+                    console.error('Error loading questions:', error);
+                });
+            } catch (err) {
+                console.error('initializeSurveyQuestionsFromFirestore error:', err);
+            }
+        }
+
+        /**
+         * Modular-safe initializer: add default questions using modular Firestore API
+         * This works with the `db`, `doc`, `getDoc`, `setDoc`, `collection`, and `getDocs` imports
+         */
+        async function initializeDefaultSurveyQuestionsModular() {
+            try {
+                const questionsCol = window.collection ? window.collection(window.db, 'survey_questions') : null;
+
+                const defaultQuestions = [
+                    { code: 'SQD0', text: 'I am satisfied with the service that I availed.', type: 'SQD', required: true, order: 0 },
+                    { code: 'SQD1', text: 'I spent a reasonable amount of time for my transaction.', type: 'SQD', required: true, order: 1 },
+                    { code: 'SQD2', text: 'The office followed the transaction\'s requirements and steps based on the information provided.', type: 'SQD', required: true, order: 2 },
+                    { code: 'SQD3', text: 'The steps (including payment) I needed to do for my transaction were easy and simple.', type: 'SQD', required: true, order: 3 },
+                    { code: 'SQD4', text: 'I easily found information about my transaction from the office or its website.', type: 'SQD', required: true, order: 4 },
+                    { code: 'SQD5', text: 'I paid a reasonable amount of fees for my transaction. (If service was free, mark the \'N/A\' option)', type: 'SQD', required: true, order: 5 },
+                    { code: 'SQD6', text: 'I feel the office was fair to everyone, or \'walang palakasan\', during my transaction.', type: 'SQD', required: true, order: 6 },
+                    { code: 'SQD7', text: 'I was treated courteously by the staff, and (if asked for help) the staff was helpful.', type: 'SQD', required: true, order: 7 },
+                    { code: 'SQD8', text: 'I got what I needed from the government office, or if denied, the reason was explained to me clearly.', type: 'SQD', required: true, order: 8 },
+                    { code: 'CC1', text: 'Which of the following best describes your awareness of a CC?', type: 'CC', required: true, order: 9 },
+                    { code: 'CC2', text: 'If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was easy to see?', type: 'CC', required: true, order: 10 },
+                    { code: 'CC3', text: 'If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was helpful?', type: 'CC', required: true, order: 11 }
+                ];
+
+                let added = 0;
+                for (const q of defaultQuestions) {
+                    const docId = q.code.toLowerCase();
+                    const qDocRef = window.doc ? window.doc(window.db, 'survey_questions', docId) : null;
+                    const snap = window.getDoc ? await window.getDoc(qDocRef) : null;
+                    if (!snap || !snap.exists || !snap.exists()) {
+                        if (window.setDoc && qDocRef) {
+                            await window.setDoc(qDocRef, {
+                                code: q.code,
+                                text: q.text,
+                                type: q.type,
+                                required: q.required,
+                                order: q.order,
+                                createdAt: window.serverTimestamp ? window.serverTimestamp() : null
+                            });
+                        } else if (window.db && window.firebase && window.firebase.firestore) {
+                            // Fallback to namespaced SDK if available
+                            const nsDb = window.firebase.firestore();
+                            await nsDb.collection('survey_questions').doc(docId).set({
+                                code: q.code,
+                                text: q.text,
+                                type: q.type,
+                                required: q.required,
+                                order: q.order,
+                                createdAt: new Date()
+                            });
+                        }
+                        added++;
+                    }
+                }
+
+                console.log(`Default questions initializer finished. Added: ${added}`);
+                if (added > 0) {
+                    alert(`Default questions added: ${added}`);
+                } else {
+                    alert('Default questions already present. No changes made.');
+                }
+            } catch (error) {
+                console.error('Error initializing default questions (modular):', error);
+                alert('Error initializing default questions: ' + (error.message || error));
+            }
+        }
+
+        /**
+         * Check collection and add defaults if empty
+         */
+        async function ensureDefaultQuestionsExist() {
+            try {
+                const qSnapshot = window.getDocs && window.collection ? await window.getDocs(window.collection(window.db, 'survey_questions')) : null;
+                if (!qSnapshot || qSnapshot.size === 0) {
+                    console.log('No survey_questions found — initializing defaults...');
+                    await initializeDefaultSurveyQuestionsModular();
+                } else {
+                    console.log('survey_questions collection already populated:', qSnapshot.size);
+                }
+            } catch (err) {
+                console.error('Error checking survey_questions collection:', err);
+            }
         }
 
         /**
@@ -1279,18 +1890,40 @@
             const updatedType = document.getElementById('editQuestionType').value;
             const updatedRequired = document.getElementById('editQuestionRequired').checked;
 
-            const db = firebase.firestore();
-            db.collection('survey_questions').doc(questionId).update({
-                text: updatedText,
-                type: updatedType,
-                required: updatedRequired
-            }).then(() => {
-                closeEditQuestionModal();
-                alert('Question updated successfully!');
-            }).catch((error) => {
-                console.error('Error updating question:', error);
-                alert('Error updating question: ' + error.message);
-            });
+            (async () => {
+                try {
+                    if (window.setDoc && window.doc) {
+                        const qRef = window.doc(window.db, 'survey_questions', questionId);
+                        await window.setDoc(qRef, {
+                            text: updatedText,
+                            type: updatedType,
+                            required: updatedRequired,
+                            updatedAt: window.serverTimestamp ? window.serverTimestamp() : null
+                        }, { merge: true });
+                        closeEditQuestionModal();
+                        alert('Question updated successfully!');
+                        return;
+                    }
+
+                    // Fallback to namespaced SDK
+                    if (window.firebase && window.firebase.firestore) {
+                        const nsDb = window.firebase.firestore();
+                        await nsDb.collection('survey_questions').doc(questionId).update({
+                            text: updatedText,
+                            type: updatedType,
+                            required: updatedRequired
+                        });
+                        closeEditQuestionModal();
+                        alert('Question updated successfully!');
+                        return;
+                    }
+
+                    throw new Error('No Firestore API available to update question');
+                } catch (error) {
+                    console.error('Error updating question:', error);
+                    alert('Error updating question: ' + (error.message || error));
+                }
+            })();
         }
 
         /**
@@ -1316,38 +1949,79 @@
                 return;
             }
 
-            const db = firebase.firestore();
+
             const docId = code.toLowerCase();
             const maxOrder = window.allSurveyQuestions.length > 0 
                 ? Math.max(...window.allSurveyQuestions.map(q => q.order || 0)) + 1
                 : window.allSurveyQuestions.length;
-            
-            db.collection('survey_questions').doc(docId).set({
-                code: code,
-                text: text,
-                type: type,
-                required: required,
-                order: maxOrder
-            }).then(() => {
-                closeAddQuestionModal();
-                alert('Question added successfully!');
-            }).catch((error) => {
-                console.error('Error adding question:', error);
-                alert('Error adding question: ' + error.message);
-            });
+
+            (async () => {
+                try {
+                    if (window.setDoc && window.doc) {
+                        const qRef = window.doc(window.db, 'survey_questions', docId);
+                        await window.setDoc(qRef, {
+                            code: code,
+                            text: text,
+                            type: type,
+                            required: required,
+                            order: maxOrder,
+                            createdAt: window.serverTimestamp ? window.serverTimestamp() : null
+                        });
+                        closeAddQuestionModal();
+                        alert('Question added successfully!');
+                        return;
+                    }
+
+                    // Fallback to namespaced SDK
+                    if (window.firebase && window.firebase.firestore) {
+                        const nsDb = window.firebase.firestore();
+                        await nsDb.collection('survey_questions').doc(docId).set({
+                            code: code,
+                            text: text,
+                            type: type,
+                            required: required,
+                            order: maxOrder,
+                            createdAt: new Date()
+                        });
+                        closeAddQuestionModal();
+                        alert('Question added successfully!');
+                        return;
+                    }
+
+                    throw new Error('No Firestore API available to add question');
+                } catch (error) {
+                    console.error('Error adding question:', error);
+                    alert('Error adding question: ' + (error.message || error));
+                }
+            })();
         }
 
         /**
          * Delete question from Firestore
          */
         function deleteQuestion(questionId) {
-            const db = firebase.firestore();
-            db.collection('survey_questions').doc(questionId).delete().then(() => {
-                alert('Question deleted successfully!');
-            }).catch((error) => {
-                console.error('Error deleting question:', error);
-                alert('Error deleting question: ' + error.message);
-            });
+            (async () => {
+                try {
+                    if (window.deleteDoc && window.doc) {
+                        const qRef = window.doc(window.db, 'survey_questions', questionId);
+                        await window.deleteDoc(qRef);
+                        alert('Question deleted successfully!');
+                        return;
+                    }
+
+                    if (window.firebase && window.firebase.firestore) {
+                        const nsDb = window.firebase.firestore();
+                        await nsDb.collection('survey_questions').doc(questionId).delete();
+                        alert('Question deleted successfully!');
+                        return;
+                    }
+
+                    throw new Error('No Firestore API available to delete question');
+                } catch (error) {
+                    console.error('Error deleting question:', error);
+                    alert('Error deleting question: ' + (error.message || error));
+                }
+            })();
         }
 
         /**
@@ -1411,7 +2085,7 @@
                 const avgSqd = sqCount > 0 ? (sqSum / sqCount).toFixed(2) : 'N/A';
 
                 const submittedAt = response.submittedAt ? new Date(response.submittedAt.toDate ? response.submittedAt.toDate() : response.submittedAt).toLocaleString() : 'N/A';
-                const officeLocation = response.officeLocation || 'N/A';
+                const officeLocation = response.regionOfResidence || 'N/A';
                 const clientType = response.clientType || 'Unknown';
                 const serviceAvailed = response.serviceAvailed || 'N/A';
 
@@ -1436,9 +2110,9 @@
         }
 
         /**
-         * Export ARTA Compliance Report as PDF using Firestore data
+         * Export ARTA Compliance Report as PDF using Firestore data with charts and graphs
          */
-        function exportToPDF() {
+        async function exportToPDF() {
             const responses = window.allSurveyResponses || [];
             
             if (responses.length === 0) {
@@ -1446,33 +2120,68 @@
                 return;
             }
 
-            // Calculate metrics from Firestore data
+            // Show loading indicator
+            const btn = document.getElementById('downloadPdfBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating PDF...';
+            btn.disabled = true;
+
+            // Calculate comprehensive metrics from Firestore data
             let totalSqdSum = 0, totalSqdCount = 0;
             const serviceMap = {};
-            const clientTypeCounts = { Citizen: 0, Business: 0, Government: 0 };
+            const regionMap = {};
+            const clientTypeCounts = { Citizen: 0, Business: 0, Government: 0, OFW: 0 };
+            const ccAwareCount = { Yes: 0, No: 0 };
+            const satisfactionRanges = { 'Very Satisfied (4.5-5)': 0, 'Satisfied (3.5-4.4)': 0, 'Neutral (2.5-3.4)': 0, 'Dissatisfied (<2.5)': 0 };
 
             responses.forEach(doc => {
+                // Aggregate service SQD scores
                 const sq = doc.serviceQuality || {};
+                let sqSum = 0, sqCount = 0;
                 Object.keys(sq).forEach(k => {
                     const v = Number(sq[k]);
                     if (!isNaN(v)) {
+                        sqSum += v;
+                        sqCount += 1;
                         totalSqdSum += v;
                         totalSqdCount += 1;
                     }
                 });
+                const avgScore = sqCount > 0 ? (sqSum / sqCount) : 0;
 
+                // Categorize satisfaction
+                if (avgScore >= 4.5) satisfactionRanges['Very Satisfied (4.5-5)'] += 1;
+                else if (avgScore >= 3.5) satisfactionRanges['Satisfied (3.5-4.4)'] += 1;
+                else if (avgScore >= 2.5) satisfactionRanges['Neutral (2.5-3.4)'] += 1;
+                else satisfactionRanges['Dissatisfied (<2.5)'] += 1;
+
+                // Aggregate services
                 const svc = (doc.serviceAvailed || 'Unknown').trim() || 'Unknown';
-                if (!serviceMap[svc]) serviceMap[svc] = { count: 0 };
+                if (!serviceMap[svc]) serviceMap[svc] = { count: 0, totalScore: 0, scoreCount: 0 };
                 serviceMap[svc].count += 1;
+                serviceMap[svc].totalScore += sqSum;
+                serviceMap[svc].scoreCount += sqCount;
 
+                // Aggregate regions
+                const region = (doc.regionOfResidence || 'Not Specified').trim();
+                if (!regionMap[region]) regionMap[region] = 0;
+                regionMap[region] += 1;
+
+                // Aggregate client types
                 const ctRaw = (doc.clientType || 'Unknown').toString().toLowerCase();
                 if (ctRaw.includes('citizen')) clientTypeCounts.Citizen += 1;
                 else if (ctRaw.includes('business')) clientTypeCounts.Business += 1;
                 else if (ctRaw.includes('government')) clientTypeCounts.Government += 1;
+                else if (ctRaw.includes('ofw')) clientTypeCounts.OFW += 1;
+
+                // Aggregate Citizen Charter awareness
+                if (doc.citizensCharter && doc.citizensCharter.cc1 !== '4') ccAwareCount.Yes += 1;
+                else ccAwareCount.No += 1;
             });
 
             const totalResponses = responses.length;
-            const avgSqd = totalSqdCount > 0 ? (totalSqdSum / totalSqdCount).toFixed(1) : 0;
+            const avgSqd = totalSqdCount > 0 ? (totalSqdSum / totalSqdCount).toFixed(2) : 0;
+            
             let mostAvailed = 'No data';
             let maxCount = 0;
             Object.keys(serviceMap).forEach(svc => {
@@ -1483,39 +2192,248 @@
             });
 
             const total = totalResponses;
-            const pct = (n) => ((n / total) * 100).toFixed(0);
+            const pct = (n) => ((n / total) * 100).toFixed(1);
             const citizenPct = pct(clientTypeCounts.Citizen);
             const businessPct = pct(clientTypeCounts.Business);
             const governmentPct = pct(clientTypeCounts.Government);
+            const ofwPct = pct(clientTypeCounts.OFW);
+            const ccAwarePct = pct(ccAwareCount.Yes);
+
+            // Generate chart images with proper sizing
+            let serviceChartImage = '';
+            let clientTypeChartImage = '';
+
+            // Helper function to resize chart images
+            function resizeChartImage(base64Img, maxWidth = 500, maxHeight = 280) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round(height * maxWidth / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round(width * maxHeight / height);
+                                height = maxHeight;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                    };
+                    img.src = base64Img;
+                });
+            }
+
+            // Capture and resize service chart
+            if (window.serviceChartInstance) {
+                try {
+                    const fullImage = window.serviceChartInstance.toBase64Image();
+                    serviceChartImage = await resizeChartImage(fullImage, 500, 280);
+                } catch(e) {
+                    console.log('Could not capture service chart');
+                }
+            }
+
+            // Capture and resize client type chart
+            if (window.clientTypeChartInstance) {
+                try {
+                    const fullImage = window.clientTypeChartInstance.toBase64Image();
+                    clientTypeChartImage = await resizeChartImage(fullImage, 450, 250);
+                } catch(e) {
+                    console.log('Could not capture client type chart');
+                }
+            }
+
+            // Build detailed HTML content for PDF
+            let serviceTableHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin: 10px 0;"><tr style="background: #e3f2fd;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Service</th><th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Count</th><th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Avg Score</th></tr>';
+            Object.keys(serviceMap).forEach(svc => {
+                const count = serviceMap[svc].count;
+                const avgScore = serviceMap[svc].scoreCount > 0 ? (serviceMap[svc].totalScore / serviceMap[svc].scoreCount).toFixed(2) : 0;
+                serviceTableHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${svc}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${count}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${avgScore}</td></tr>`;
+            });
+            serviceTableHtml += '</table>';
+
+            let regionTableHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 11px; margin: 10px 0;"><tr style="background: #e3f2fd;"><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Region</th><th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Count</th><th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Percentage</th></tr>';
+            Object.keys(regionMap).sort().forEach(region => {
+                const count = regionMap[region];
+                const percentage = pct(count);
+                regionTableHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${region}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${count}</td><td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${percentage}%</td></tr>`;
+            });
+            regionTableHtml += '</table>';
 
             const htmlContent = `
                 <div style="font-family: Arial, sans-serif; padding: 20px;">
-                    <h1 style="text-align: center; color: #0b296b;">ARTA Customer Satisfaction Survey</h1>
-                    <h2 style="text-align: center; color: #2563eb;">Compliance Report</h2>
-                    <p style="text-align: center; font-size: 12px; color: #666;">Generated: ${new Date().toLocaleString()}</p>
-                    
-                    <div style="background: #e3f2fd; padding: 10px; border-left: 4px solid #2196f3; margin: 20px 0;">
-                        <strong style="color: #0b296b;">ARTA Compliance Notice:</strong> This report contains official metrics required for ARTA submission.
+                    <!-- Title Section -->
+                    <div style="text-align: center; margin-bottom: 20px; border-bottom: 3px solid #0b296b; padding-bottom: 15px;">
+                        <h1 style="margin: 0; color: #0b296b; font-size: 28px;">ARTA Customer Satisfaction Survey</h1>
+                        <h2 style="margin: 5px 0 0 0; color: #2563eb; font-size: 20px;">Compliance Report</h2>
+                        <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">Generated: ${new Date().toLocaleString()}</p>
                     </div>
                     
-                    <div style="margin: 20px 0;">
-                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
-                            <strong style="color: #0b296b;">Total Survey Responses:</strong> ${totalResponses}
-                        </div>
-                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
-                            <strong style="color: #0b296b;">Average Satisfaction Score (SQD):</strong> ${avgSqd} / 5
-                        </div>
-                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
-                            <strong style="color: #0b296b;">Most Availed Service:</strong> ${mostAvailed}
-                        </div>
-                        <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd;">
-                            <strong style="color: #0b296b;">Client Type Distribution:</strong> Citizen ${citizenPct}% | Business ${businessPct}% | Government ${governmentPct}%
+                    <!-- Compliance Notice -->
+                    <div style="background: #e3f2fd; padding: 12px; border-left: 4px solid #2196f3; margin: 20px 0; border-radius: 4px;">
+                        <strong style="color: #0b296b;">ARTA COMPLIANCE NOTICE:</strong> This report contains official metrics required for ARTA submission and follows all regulatory requirements.
+                    </div>
+
+                    <!-- Key Metrics Summary -->
+                    <div style="margin: 25px 0;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">EXECUTIVE SUMMARY</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="background: #f3f4f6; padding: 12px; border-left: 4px solid #2563eb; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 12px; color: #666;">Total Survey Responses</p>
+                                <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #0b296b;">${totalResponses}</p>
+                            </div>
+                            <div style="background: #f3f4f6; padding: 12px; border-left: 4px solid #059669; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 12px; color: #666;">Average Satisfaction Score</p>
+                                <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #0b296b;">${avgSqd} <span style="font-size: 14px;">/ 5.0</span></p>
+                            </div>
+                            <div style="background: #f3f4f6; padding: 12px; border-left: 4px solid #dc2626; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 12px; color: #666;">Most Availed Service</p>
+                                <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold; color: #0b296b;">${mostAvailed}</p>
+                            </div>
+                            <div style="background: #f3f4f6; padding: 12px; border-left: 4px solid #7c3aed; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 12px; color: #666;">Charter Awareness</p>
+                                <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #0b296b;">${ccAwarePct}<span style="font-size: 14px;">%</span></p>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
-                        <p>This report is generated automatically from the ARTA CSS System and follows official ARTA metrics.</p>
-                        <p>For questions or clarifications, contact your ARTA system administrator.</p>
+
+                    <!-- Client Type Distribution -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">CLIENT TYPE DISTRIBUTION</h3>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px 0; font-weight: bold; color: #374151;">Breakdown:</p>
+                            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #3b82f6;">Citizen:</span> ${clientTypeCounts.Citizen} (${citizenPct}%)</li>
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #f59e0b;">Business:</span> ${clientTypeCounts.Business} (${businessPct}%)</li>
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #ef4444;">Government:</span> ${clientTypeCounts.Government} (${governmentPct}%)</li>
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #8b5cf6;">OFW:</span> ${clientTypeCounts.OFW} (${ofwPct}%)</li>
+                            </ul>
+                        </div>
+                        ${clientTypeChartImage ? `<div style="margin-top: 15px; text-align: center; page-break-inside: avoid;"><img src="${clientTypeChartImage}" style="width: 100%; max-width: 450px; height: auto; border: 1px solid #e5e7eb; border-radius: 4px;"></div>` : ''}
+                    </div>
+
+                    <!-- Satisfaction Levels -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">SATISFACTION LEVELS</h3>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #059669;">Very Satisfied (4.5-5.0):</span> ${satisfactionRanges['Very Satisfied (4.5-5)']} responses (${pct(satisfactionRanges['Very Satisfied (4.5-5)'])}%)</li>
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #3b82f6;">Satisfied (3.5-4.4):</span> ${satisfactionRanges['Satisfied (3.5-4.4)']} responses (${pct(satisfactionRanges['Satisfied (3.5-4.4)'])}%)</li>
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #f59e0b;">Neutral (2.5-3.4):</span> ${satisfactionRanges['Neutral (2.5-3.4)']} responses (${pct(satisfactionRanges['Neutral (2.5-3.4)'])}%)</li>
+                                <li style="margin: 8px 0; color: #1f2937;"><span style="font-weight: bold; color: #ef4444;">Dissatisfied (&lt;2.5):</span> ${satisfactionRanges['Dissatisfied (<2.5)']} responses (${pct(satisfactionRanges['Dissatisfied (<2.5)'])}%)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Services Analysis -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">SERVICES ANALYSIS</h3>
+                        <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">Services Availed and Average Satisfaction Scores:</p>
+                        ${serviceTableHtml}
+                        ${serviceChartImage ? `<div style="margin-top: 15px; text-align: center; page-break-inside: avoid;"><img src="${serviceChartImage}" style="width: 100%; max-width: 500px; height: auto; border: 1px solid #e5e7eb; border-radius: 4px;"></div>` : ''}
+                    </div>
+
+                    <!-- Regional Distribution -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">REGIONAL DISTRIBUTION</h3>
+                        <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">Survey Responses by Region:</p>
+                        ${regionTableHtml}
+                    </div>
+
+                    <!-- Key Findings -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">KEY FINDINGS & INSIGHTS</h3>
+                        <div style="background: #fef3c7; padding: 15px; border-radius: 4px; border-left: 4px solid #f59e0b; margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #92400e; font-size: 13px;">Overall Performance</h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #1f2937;">
+                                <li>Average satisfaction score of <strong>${avgSqd}/5.0</strong> indicates ${avgSqd >= 4.0 ? 'strong' : avgSqd >= 3.0 ? 'moderate' : 'needs improvement in'} service quality</li>
+                                <li>${satisfactionRanges['Very Satisfied (4.5-5)'] + satisfactionRanges['Satisfied (3.5-4.4)'] >= total * 0.75 ? '<strong>Positive:</strong> Over 75% of respondents are satisfied or very satisfied' : '<strong>Action Required:</strong> Less than 75% satisfaction rate detected'}</li>
+                                <li>Citizens Charter awareness stands at <strong>${ccAwarePct}%</strong> ${ccAwarePct >= 75 ? '(Excellent)' : ccAwarePct >= 50 ? '(Good)' : '(Needs improvement)'}</li>
+                                <li>Total respondents: <strong>${totalResponses}</strong> survey submissions across multiple regions</li>
+                            </ul>
+                        </div>
+                        <div style="background: #dbeafe; padding: 15px; border-radius: 4px; border-left: 4px solid #3b82f6; margin-bottom: 15px;">
+                            <h4 style="margin: 0 0 10px 0; color: #1e40af; font-size: 13px;">Service Analysis</h4>
+                            <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #1f2937;">
+                                <li>Most availed service: <strong>${mostAvailed}</strong></li>
+                                <li>Total unique services provided: <strong>${Object.keys(serviceMap).length}</strong></li>
+                                <li>Client diversity: Serving citizens, businesses, government agencies, and OFW with balanced distribution</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics Summary -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">DETAILED PERFORMANCE METRICS</h3>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <tr style="background: #e3f2fd;">
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: left; color: #0b296b; font-weight: bold;">Metric</th>
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: center; color: #0b296b; font-weight: bold;">Value</th>
+                                <th style="border: 1px solid #ddd; padding: 10px; text-align: left; color: #0b296b; font-weight: bold;">Status</th>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 10px;">Total Survey Responses</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${totalResponses}</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;"><span style="background: #dcfce7; padding: 3px 8px; border-radius: 3px; color: #166534;">Active</span></td>
+                            </tr>
+                            <tr style="background: #f9fafb;">
+                                <td style="border: 1px solid #ddd; padding: 10px;">Average Satisfaction Score (SQD)</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${avgSqd} / 5.0</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;"><span style="background: ${avgSqd >= 4.0 ? '#dcfce7' : avgSqd >= 3.0 ? '#fef3c7' : '#fee2e2'}; padding: 3px 8px; border-radius: 3px; color: ${avgSqd >= 4.0 ? '#166534' : avgSqd >= 3.0 ? '#92400e' : '#991b1b'};">${avgSqd >= 4.0 ? 'Excellent' : avgSqd >= 3.0 ? 'Good' : 'Needs Improvement'}</span></td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 10px;">Citizens Charter Awareness</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${ccAwarePct}%</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;"><span style="background: ${ccAwarePct >= 75 ? '#dcfce7' : ccAwarePct >= 50 ? '#fef3c7' : '#fee2e2'}; padding: 3px 8px; border-radius: 3px; color: ${ccAwarePct >= 75 ? '#166534' : ccAwarePct >= 50 ? '#92400e' : '#991b1b'};">${ccAwarePct >= 75 ? 'Excellent' : ccAwarePct >= 50 ? 'Good' : 'Needs Improvement'}</span></td>
+                            </tr>
+                            <tr style="background: #f9fafb;">
+                                <td style="border: 1px solid #ddd; padding: 10px;">Regions Served</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${Object.keys(regionMap).length}</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;"><span style="background: #dbeafe; padding: 3px 8px; border-radius: 3px; color: #1e40af;">Comprehensive</span></td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #ddd; padding: 10px;">Services Provided</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold;">${Object.keys(serviceMap).length}</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;"><span style="background: #dbeafe; padding: 3px 8px; border-radius: 3px; color: #1e40af;">Diverse</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Compliance Checklist -->
+                    <div style="margin: 25px 0; page-break-inside: avoid;">
+                        <h3 style="color: #0b296b; border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 15px;">ARTA COMPLIANCE CHECKLIST</h3>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 4px; border: 1px solid #e5e7eb;">
+                            <ul style="margin: 0; padding-left: 20px; list-style: none;">
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Survey responses collected and documented</li>
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Service quality data aggregated and analyzed</li>
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Citizens Charter awareness assessment completed</li>
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Regional data compiled for all service delivery areas</li>
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Client satisfaction scores calculated and verified</li>
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Service availability and responsiveness documented</li>
+                                <li style="margin: 8px 0; color: #1f2937;">✓ Report generated with official ARTA metrics</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; font-size: 10px; color: #666; page-break-inside: avoid;">
+                        <p style="margin: 8px 0;"><strong>Report Information:</strong> This is an official ARTA Customer Satisfaction Survey Compliance Report generated automatically from the system database.</p>
+                        <p style="margin: 8px 0;"><strong>Data Source:</strong> ARTA CSS System - Firestore Database</p>
+                        <p style="margin: 8px 0;"><strong>Report Period:</strong> Current data as of ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p style="margin: 8px 0;"><strong>Generated:</strong> ${new Date().toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
+                        <p style="margin: 8px 0; border-top: 1px solid #ddd; padding-top: 10px;">This report contains confidential information and should be handled according to organizational data security policies. For questions or clarifications, contact your ARTA system administrator.</p>
+                        <p style="margin: 8px 0; color: #999; font-style: italic;">Document Type: Official ARTA Compliance Report | Classification: Internal Use</p>
                     </div>
                 </div>
             `;
@@ -1527,11 +2445,20 @@
                 margin: 10,
                 filename: `ARTA-Compliance-Report-${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
+                html2canvas: { scale: 1.5, logging: false, useCORS: true, allowTaint: true },
                 jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
             };
             
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error('PDF generation error:', err);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('Error generating PDF. Please try again.');
+            });
         }
 
         /**
@@ -1698,7 +2625,8 @@
         if (setupQuestionsBtn) {
             setupQuestionsBtn.addEventListener('click', function() {
                 if (confirm('This will load all default ARTA survey questions into Firestore. Existing questions will be skipped. Continue?')) {
-                    initializeDefaultSurveyQuestions();
+                    // Use the modular-safe initializer below (works with getFirestore)
+                    initializeDefaultSurveyQuestionsModular();
                 }
             });
         }
@@ -1729,18 +2657,142 @@
 
         // --- Event Listeners ---
         
-        // 1. Login Form Submission
-        loginForm.addEventListener('submit', function(event) {
+        // 1. Login Form Submission with Validation
+        loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            const email = document.getElementById('email').value;
+            
+            // Clear previous errors
+            clearLoginErrors();
+            
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-
-            if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
-                toggleAppView(true);
-            } else {
-                loginError.textContent = 'Invalid email or password.';
-                loginError.classList.remove('hidden');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            // Validation
+            let hasError = false;
+            
+            // Email validation
+            if (!email) {
+                showFieldError('emailError', 'Email is required');
+                emailInput.classList.add('border-red-500');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showFieldError('emailError', 'Please enter a valid email address');
+                emailInput.classList.add('border-red-500');
+                hasError = true;
             }
+            
+            // Password validation
+            if (!password) {
+                showFieldError('passwordError', 'Password is required');
+                passwordInput.classList.add('border-red-500');
+                hasError = true;
+            } else if (password.length < 6) {
+                showFieldError('passwordError', 'Password must be at least 6 characters');
+                passwordInput.classList.add('border-red-500');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            // Show loading overlay
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                // Validate admin credentials with Firebase
+                const result = await validateAdminLogin(email, password);
+                console.log('validateAdminLogin result:', result);
+                
+                if (result.success) {
+                    // Store user session
+                    sessionStorage.setItem('adminUser', JSON.stringify(result.user));
+                    sessionStorage.setItem('adminSessionTime', new Date().getTime());
+                    
+                    // Hide loading overlay and show dashboard
+                    if (document.body.contains(loadingOverlay)) {
+                        document.body.removeChild(loadingOverlay);
+                    }
+                    
+                    // Show success message
+                    const loginError = document.getElementById('loginError');
+                    loginError.textContent = `Welcome, ${result.user.name}!`;
+                    loginError.classList.remove('hidden');
+                    loginError.classList.remove('text-red-600');
+                    loginError.classList.add('text-green-600');
+                    
+                    setTimeout(() => {
+                        toggleAppView(true);
+                    }, 500);
+                } else {
+                    // Show error message
+                    if (document.body.contains(loadingOverlay)) {
+                        document.body.removeChild(loadingOverlay);
+                    }
+                    
+                    showFieldError('loginError', result.message);
+                    document.getElementById('loginError').classList.add('text-red-600');
+                    
+                    // Highlight password field for general auth errors
+                    if (result.message.includes('Invalid') || result.message.includes('password')) {
+                        passwordInput.classList.add('border-red-500');
+                    }
+                }
+            } catch (error) {
+                console.error('Login error (unexpected):', error);
+                if (document.body.contains(loadingOverlay)) {
+                    document.body.removeChild(loadingOverlay);
+                }
+                // Surface the underlying message when possible to aid debugging.
+                const message = (error && (error.message || error.code)) ? (error.message || error.code) : 'An error occurred. Please try again.';
+                showFieldError('loginError', message);
+                document.getElementById('loginError').classList.add('text-red-600');
+            }
+        });
+
+        // Helper function to validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Helper function to show field errors
+        function showFieldError(errorElementId, message) {
+            const errorElement = document.getElementById(errorElementId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+
+        // Helper function to clear all login errors
+        function clearLoginErrors() {
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+            const loginError = document.getElementById('loginError');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            if (emailError) emailError.classList.add('hidden');
+            if (passwordError) passwordError.classList.add('hidden');
+            if (loginError) loginError.classList.add('hidden');
+            emailInput.classList.remove('border-red-500');
+            passwordInput.classList.remove('border-red-500');
+            emailInput.classList.add('border-gray-300');
+            passwordInput.classList.add('border-gray-300');
+        }
+
+        // Clear errors when user starts typing
+        document.getElementById('email').addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            this.classList.add('border-gray-300');
+            document.getElementById('emailError').classList.add('hidden');
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            this.classList.add('border-gray-300');
+            document.getElementById('passwordError').classList.add('hidden');
         });
 
         // 2. Sidebar Navigation Clicks
@@ -1767,27 +2819,242 @@
             navigateTo('user-management');
         });
 
-        // 6. NEW: Add User Form Submission with Validation and Pop-up
-        addUserForm.addEventListener('submit', function(event) {
+        // 6. NEW: Add User Form Submission with Validation -> Invite flow
+        addUserForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            if (validateAddUserForm()) {
-                // Mock: Successful invitation
-                const firstName = document.getElementById('firstName').value.trim();
-                const lastName = document.getElementById('lastName').value.trim();
-                const role = document.getElementById('userRole').value;
-                
-                // Show a simple success alert (pop-up)
-                alert(`Successfully invited user: ${firstName} ${lastName} as a ${role}.`);
+            if (!validateAddUserForm()) return;
 
-                // Clear the form and errors
-                addUserForm.reset();
-                clearAddUserErrors();
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const role = document.getElementById('userRole').value;
 
-                // Go back to the Manage Users dashboard
-                navigateTo('user-management');
+            // Show loading overlay
+            document.body.appendChild(loadingOverlay);
+
+            try {
+                const inviteResult = await inviteUser({ email, password: undefined, first_name: firstName, last_name: lastName, role });
+
+                if (inviteResult.success) {
+                    alert(
+                        `✓ User invited successfully!\n\n` +
+                        `Email: ${email}\n` +
+                        `Role: ${role}\n\n` +
+                        `📧 Setup email sent to ${email}\n\n` +
+                        `ℹ️ What happens next:\n` +
+                        `1. The user will receive an email with a password setup link\n` +
+                        `2. They will click the link and set their own password\n` +
+                        `3. They can then login with their email and password\n` +
+                        `4. Account status will be "active" once they verify their email`
+                    );
+
+                    // Clear form and refresh users
+                    addUserForm.reset();
+                    clearAddUserErrors();
+
+                    // Return to user management view
+                    navigateTo('user-management');
+                } else {
+                    alert('Failed to invite user: ' + (inviteResult.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Invite error:', err);
+                alert('Error inviting user: ' + (err && err.message ? err.message : err));
+            } finally {
+                if (document.body.contains(loadingOverlay)) document.body.removeChild(loadingOverlay);
             }
         });
+
+        // Helper: generate a secure temporary password
+        // Invite user: Use Cloud Function to create Auth user and admin_users document
+        async function inviteUser({ email, password, first_name, last_name, role }) {
+            try {
+                // Call the Cloud Function to create the admin user
+                const createAdminUserFn = window.httpsCallable(window.functions, 'createAdminUser');
+                
+                const result = await createAdminUserFn({
+                    email: email,
+                    first_name: first_name,
+                    last_name: last_name,
+                    role: role
+                });
+
+                if (result.data.success) {
+                    console.log('Admin user created successfully:', result.data);
+                    return { 
+                        success: true, 
+                        uid: result.data.uid, 
+                        tempPassword: password,
+                        message: result.data.message
+                    };
+                } else {
+                    return { 
+                        success: false, 
+                        message: result.data.message || 'Failed to create admin user'
+                    };
+                }
+            } catch (error) {
+                console.error('inviteUser error:', error);
+                
+                // Handle specific errors
+                if (error.code === 'functions/permission-denied') {
+                    return { success: false, message: 'Only super_admin can invite new users.' };
+                } else if (error.code === 'functions/invalid-argument') {
+                    return { success: false, message: 'Invalid user data. Please check all fields.' };
+                } else if (error.code === 'functions/already-exists') {
+                    return { success: false, message: 'This email is already registered.' };
+                }
+
+                return { success: false, message: error && error.message ? error.message : String(error) };
+            }
+        }
+
+        // Load admin users from Firestore and render in User Management
+        function loadAdminUsers() {
+            try {
+                // If an existing listener is active, unsubscribe first to avoid duplicates
+                if (window._adminUsersUnsub && typeof window._adminUsersUnsub === 'function') {
+                    try { window._adminUsersUnsub(); } catch (e) { console.warn('Failed to unsubscribe previous admin_users listener', e); }
+                }
+
+                const usersRef = window.collection(window.db, 'admin_users');
+                // Save unsubscribe function so we can stop listening later if needed
+                window._adminUsersUnsub = window.onSnapshot(usersRef, (snapshot) => {
+                    console.log('[admin.html] admin_users snapshot received, docCount=', snapshot.size);
+                    const rows = [];
+                    snapshot.forEach(docSnap => {
+                        const d = docSnap.data();
+                        rows.push({ id: docSnap.id, ...d });
+                    });
+                    console.log('[admin.html] admin_users parsed rows=', rows.length);
+                    renderAdminUsers(rows);
+                }, (err) => {
+                    console.error('[admin.html] admin_users snapshot error', err);
+                    // Show friendly UI message in the table area when permission denied or other errors occur
+                    const tbody = document.querySelector('#user-management table tbody');
+                    if (tbody) {
+                        const msg = (err && err.code === 'permission-denied') ? 'Permission denied: check Firestore rules and ensure your account has rights to read admin_users.' : 'Error loading admin users.';
+                        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-red-500">${msg}</td></tr>`;
+                    }
+                });
+            } catch (err) {
+                console.error('loadAdminUsers error', err);
+            }
+        }
+
+        function renderAdminUsers(users) {
+            const tbody = document.querySelector('#user-management table tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No admin users found</td></tr>';
+                return;
+            }
+
+            users.forEach(u => {
+                // Handle both old (isActive) and new (status) status formats
+                const userStatus = u.status || (u.isActive ? 'active' : 'pending');
+                const statusLabel = userStatus === 'active' 
+                    ? '<span class="status-active">Active</span>' 
+                    : `<span class="status-pending">Pending</span>`;
+                
+                const roleBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${u.role || 'admin'}</span>`;
+                
+                // Combine first_name and last_name, fallback to name field if available
+                const fullName = (u.first_name && u.last_name) 
+                    ? `${u.first_name} ${u.last_name}` 
+                    : (u.name || '');
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${fullName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${u.email || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${roleBadge}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${statusLabel}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2 flex gap-2">
+                        ${userStatus === 'pending' ? `<button class="text-green-600 hover:text-green-800 resend-verification-btn text-xs px-2 py-1 rounded" data-uid="${u.id}" data-email="${u.email}" title="Resend verification email">📧 Verify</button>` : ''}
+                        <button class="text-red-600 hover:text-red-800 delete-admin-btn" data-uid="${u.id}"><i data-lucide="trash" class="w-5 h-5"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Recreate lucide icons for dynamic buttons
+            if (window.lucide) lucide.createIcons();
+
+            // Attach handlers for resend verification email
+            document.querySelectorAll('.resend-verification-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const uid = this.dataset.uid;
+                    const email = this.dataset.email;
+                    
+                    try {
+                        showLoader('Sending verification email...');
+                        
+                        // Use Cloud Function to resend verification email
+                        const response = await fetch('https://us-central1-daisysyete-c9511.cloudfunctions.net/resendVerificationEmail', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${await window.auth.currentUser.getIdToken()}`
+                            },
+                            body: JSON.stringify({ uid, email })
+                        });
+                        
+                        const result = await response.json();
+                        hideLoader();
+                        
+                        if (result.success) {
+                            alert(`✓ Verification email sent to ${email}.\n\nThe user can now click the link to verify their email and activate their account.`);
+                        } else {
+                            alert(`Failed to send verification email: ${result.message || 'Unknown error'}`);
+                        }
+                    } catch (error) {
+                        hideLoader();
+                        console.error('Error resending verification:', error);
+                        alert(`Error: ${error.message || 'Could not send verification email'}`);
+                    }
+                });
+            });
+
+            // Attach handlers for delete
+            document.querySelectorAll('.delete-admin-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const uid = this.dataset.uid;
+                    showConfirmationModal('Delete Admin', 'Are you sure you want to delete this admin?', async () => {
+                        try {
+                            await window.collection(window.db, 'admin_users');
+                            // Delete Firestore doc
+                            await window.deleteDoc(window.doc(window.db,'admin_users', uid));
+                        } catch (e) {
+                            console.error('Error deleting admin doc', e);
+                            alert('Failed to delete admin user.');
+                        }
+                    });
+                });
+            });
+        }
+
+        // Start listening for admin users only after auth state is known (avoid permission-denied when unauthenticated)
+        try {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    try { loadAdminUsers(); } catch (e) { console.warn('Could not start admin_users listener after sign-in', e); }
+                } else {
+                    // If user signed out, clear any existing table and unsubscribe
+                    const tbody = document.querySelector('#user-management table tbody');
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Please sign in to view admin users</td></tr>';
+                    if (window._adminUsersUnsub && typeof window._adminUsersUnsub === 'function') {
+                        try { window._adminUsersUnsub(); } catch (e) { /* ignore */ }
+                        window._adminUsersUnsub = null;
+                    }
+                }
+            });
+        } catch (e) { console.warn('Could not attach auth state listener for admin_users', e); }
 
         // 7. Export CSV Button
         const exportAllCsvBtn = document.getElementById('exportAllCsvBtn');
@@ -1831,18 +3098,54 @@
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             // Show login view by default (do not bypass login)
-            toggleAppView(true);
+            toggleAppView(false);
             
             // Initialize survey questions from Firestore with real-time listener
             initializeSurveyQuestionsFromFirestore();
             
-            // Load default questions if Firestore is empty (first time setup)
-            loadDefaultQuestionsToFirestore();
+            // Ensure default questions exist when admin loads (modular-safe)
+            // We call this after the real-time listener is set so UI updates automatically
+            ensureDefaultQuestionsExist();
         });
 
         // Ensure lucide icons are created on first load for the login view
         lucide.createIcons();
 
     </script>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="hidden-modal">
+        <div class="modal-backdrop" id="forgotPasswordBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">Forgot Password</div>
+            <div class="modal-body">
+                <p class="mb-3">If you have forgotten your password, please reach out to the System Administrator.</p>
+                <p class="mb-3"><strong>Contact Information:</strong></p>
+                <p>Email: <a href="mailto:admin@arta.gov.ph" class="text-blue-600 hover:text-blue-500">admin@arta.gov.ph</a></p>
+                <p>Hotline: +63 (2) 8123-ARTA</p>
+                <p class="mt-4 text-sm text-gray-500">Please provide your email address and a brief description of the issue when contacting support.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="closeForgotPasswordModal" class="modal-btn modal-btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutConfirmModal" class="hidden-modal">
+        <div class="modal-backdrop" id="logoutConfirmBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">Confirm Logout</div>
+            <div class="modal-body">
+                <p>Are you sure you want to log out? Any unsaved changes may be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelLogoutBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+                <button type="button" id="confirmLogoutBtn" class="modal-btn modal-btn-danger">Yes, Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./rbac.js"></script>
 </body>
 </html>

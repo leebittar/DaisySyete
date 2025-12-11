@@ -31,67 +31,51 @@
   </head>
   <body class="antialiased text-dark-gray">
     <header class="header-bg sticky top-0 z-50 shadow-lg">
-      <nav
-        class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8"
-      >
-        <div class="flex items-center space-x-4">
-          <img
-            src="User View/Nav/valenzuealife.png"
-            alt="Valenzuela City Seal"
-            class="h-20 w-20 object-contain"
-          />
-          <img
-            src="User View/Nav/text.png"
-            alt="Valenzuelife Text Logo"
-            class="h-10 object-contain hidden sm:block"
-          />
+      <nav class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <!-- Mobile Menu Button + Logo -->
+        <div class="flex items-center space-x-2 md:hidden">
+          <button class="burger-btn" id="burgerBtn">
+            <span class="burger-line"></span>
+            <span class="burger-line"></span>
+            <span class="burger-line"></span>
+          </button>
+          <a href="index.html" class="flex items-center">
+            <img src="User View/Nav/valenzuealife.png" alt="Valenzuela City Seal" class="h-16 w-16 object-contain" />
+          </a>
+        </div>
+
+        <!-- Desktop Logo -->
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="index.html" class="flex items-center hover:opacity-80 transition">
+            <img src="User View/Nav/valenzuealife.png" alt="Valenzuela City Seal" class="h-20 w-20 object-contain" />
+          </a>
+          <img src="User View/Nav/text.png" alt="Valenzuelife Text Logo" class="h-10 object-contain hidden sm:block" />
         </div>
 
         <div class="flex-grow flex justify-center hidden md:flex">
-          <div
-            class="flex space-x-10 text-white text-sm font-bold tracking-widest"
-          >
-            <a
-              href="index.html"
-              class="nav-link hover:text-blue-300 transition duration-150"
-              >HOME</a
-            >
-            <a
-              href="about.html"
-              class="nav-link active hover:text-blue-300 transition duration-150"
-              >ABOUT US</a
-            >
-            <a
-              href="howitworks.html"
-              class="nav-link hover:text-blue-300 transition duration-150"
-              >HOW IT WORKS</a
-            >
-            <a
-              href="help.html"
-              class="nav-link hover:text-blue-300 transition duration-150"
-              >HELP</a
-            >
+          <div class="flex space-x-10 text-white text-sm font-bold tracking-widest">
+            <a href="index.html" class="nav-link hover:text-blue-300 transition duration-150">HOME</a>
+            <a href="about.html" class="nav-link active hover:text-blue-300 transition duration-150">ABOUT US</a>
+            <a href="howitworks.html" class="nav-link hover:text-blue-300 transition duration-150">HOW IT WORKS</a>
+            <a href="help.html" class="nav-link hover:text-blue-300 transition duration-150">HELP</a>
           </div>
         </div>
 
         <div class="flex items-center space-x-4 flex-shrink-0">
-          <a
-            href="survey.html"
-            class="bg-white text-primary-dark font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:bg-gray-200 transition duration-150"
-          >
-            Take the Survey
+          <a href="survey.html" class="bg-white text-primary-dark font-bold text-sm px-4 py-2 rounded-full shadow-lg hover:bg-gray-200 transition duration-150">Take the Survey</a>
+          <a href="admin.html" class="text-white hover:text-blue-300 transition duration-150 flex items-center">
+            <img src="User View/Nav/adminlogin.png" alt="Admin Login Shield" class="h-7 w-7 object-contain" />
           </a>
-          <button
-            class="text-white hover:text-blue-300 transition duration-150"
-          >
-            <img
-              src="User View/Nav/adminlogin.png"
-              alt="Admin Login Shield"
-              class="h-7 w-7 object-contain"
-            />
-          </button>
         </div>
       </nav>
+
+      <!-- Mobile Navigation Menu -->
+      <div id="mobileNav" class="md:hidden bg-primary-dark text-white">
+        <a href="index.html" class="block px-4 py-3 border-b border-primary-dark">HOME</a>
+        <a href="about.html" class="block px-4 py-3 border-b border-primary-dark">ABOUT US</a>
+        <a href="howitworks.html" class="block px-4 py-3 border-b border-primary-dark">HOW IT WORKS</a>
+        <a href="help.html" class="block px-4 py-3 border-b border-primary-dark">HELP</a>
+      </div>
     </header>
 
     <main>
@@ -183,14 +167,10 @@
       </section>
       
       <section class="section-padding max-w-7xl mx-auto">
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-10 p-6 bg-white rounded-xl shadow-lg border border-gray-100"
-        >
-          <div class="text-center">
-            <h3 class="text-3xl font-extrabold text-primary-dark mb-4">
-              Our Mission
-            </h3>
-            <p class="text-lg text-gray-700 leading-relaxed text-left md:text-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+            <h3 class="text-3xl font-extrabold text-primary-dark mb-4">Our Mission</h3>
+            <p class="text-lg text-gray-700 leading-relaxed">
               To promote participatory governance by providing a fast, reliable,
               and accessible platform for citizens to communicate with their
               local government. We aim to strengthen trust, ensure
@@ -198,11 +178,10 @@
               delivery.
             </p>
           </div>
-          <div class="text-center">
-            <h3 class="text-3xl font-extrabold text-primary-dark mb-4">
-              Our Vision
-            </h3>
-            <p class="text-lg text-gray-700 leading-relaxed text-left md:text-center">
+
+          <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+            <h3 class="text-3xl font-extrabold text-primary-dark mb-4">Our Vision</h3>
+            <p class="text-lg text-gray-700 leading-relaxed">
               A responsive and transparent city government that listens to its
               people and values their voices, where citizen participation drives
               continuous progress and where every Valenzuelano feels heard,
