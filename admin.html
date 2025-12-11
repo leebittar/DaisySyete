@@ -48,6 +48,28 @@
         .status-active { background-color: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
         .status-pending { background-color: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 9999px; font-weight: 500; }
 
+        /* Loader overlay styles */
+        .loader-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 9999; }
+        .loader-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+        .loader-spinner { width: 48px; height: 48px; border-radius: 9999px; border: 6px solid rgba(0,0,0,0.08); border-top-color: #2563EB; animation: ds-spin 1s linear infinite; }
+        @keyframes ds-spin { to { transform: rotate(360deg); } }
+        .loader-text { color: #0f172a; font-weight: 600; }
+
+        /* Modal styles */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+        .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); bg: white; background: white; border-radius: 0.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); z-index: 50; max-width: 28rem; width: 90%; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid #e5e7eb; font-size: 1.125rem; font-weight: 700; color: #111827; }
+        .modal-body { padding: 1.5rem; color: #374151; line-height: 1.5; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.75rem; justify-content: flex-end; }
+        .modal-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; border: 1px solid transparent; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+        .modal-btn-primary { background: #2563EB; color: white; }
+        .modal-btn-primary:hover { background: #1d4ed8; }
+        .modal-btn-secondary { background: #e5e7eb; color: #111827; }
+        .modal-btn-secondary:hover { background: #d1d5db; }
+        .modal-btn-danger { background: #dc2626; color: white; }
+        .modal-btn-danger:hover { background: #b91c1c; }
+        .hidden-modal { display: none !important; }
+
     </style>
     <!-- Libraries for data export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
@@ -76,12 +98,13 @@
                             <div>
                                 <label for="email" class="block text-lg font-medium text-gray-700">Email:</label>
                                 <div class="mt-2 relative rounded-xl shadow-md">
-                                    <input type="email" id="email" name="email" required placeholder="e.g. juan_delacruz@gmail.com"
+                                    <input type="email" id="email" name="email" required placeholder="youremail@email.com"
                                            class="w-full px-5 py-3 border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-gray-900 pr-12">
                                     <span class="absolute right-0 top-0 mt-3 mr-4 text-gray-400">
                                         <i data-lucide="mail" class="w-5 h-5"></i>
                                     </span>
                                 </div>
+                                <div id="emailError" class="text-red-600 text-sm mt-1 hidden"></div>
                             </div>
                             <div>
                                 <label for="password" class="block text-lg font-medium text-gray-700">Password:</label>
@@ -92,13 +115,14 @@
                                         <i data-lucide="lock" class="w-5 h-5"></i>
                                     </span>
                                 </div>
+                                <div id="passwordError" class="text-red-600 text-sm mt-1 hidden"></div>
                                 <div class="text-sm mt-2 text-right">
-                                    <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                                    <button type="button" id="forgotPasswordLink" class="text-sm font-medium text-blue-600 hover:text-blue-500 bg-transparent border-none cursor-pointer">
                                         Forgot password?
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
-                            <div id="loginError" class="text-red-600 text-center hidden">Invalid email or password.</div>
+                            <div id="loginError" class="text-red-600 text-center hidden"></div>
                             <div class="pt-4">
                                 <button type="submit"
                                         class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-xl text-lg font-medium text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-500 focus:ring-opacity-50 transition duration-150 ease-in-out">
@@ -126,13 +150,21 @@
                     </div>
                     <h1 class="text-xl font-semibold text-gray-800 hidden md:block">ARTA Customer Satisfaction Survey Dashboard</h1>
                 </div>
-                <div class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition duration-150">
-                    <div class="w-10 h-10 p-2 rounded-full flex-shrink-0">
-                         <img src="Admin Side/Nav Admin/admin.png" alt="" class="w-full h-full object-contain">
+                <div id="userMenu" class="relative">
+                    <button id="userMenuButton" class="flex items-center space-x-2 cursor-pointer p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition duration-150">
+                        <div class="w-10 h-10 p-2 rounded-full flex-shrink-0">
+                             <img src="Admin Side/Nav Admin/admin.png" alt="" class="w-full h-full object-contain">
+                        </div>
+                        <span class="hidden sm:inline font-medium text-gray-700">Admin</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
+                    </button>
+
+                    <div id="userDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md z-50 ring-1 ring-black ring-opacity-5">
+                        <div class="py-1">
+                            <button id="logoutBtn" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                        </div>
                     </div>
-                    <span class="hidden sm:inline font-medium text-gray-700">Admin</span>
-                    <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
-                    </div>
+                </div>
             </header>
 
             <div class="flex flex-grow pt-20">
@@ -256,7 +288,7 @@
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DATE/TIME</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OFFICE/LOCATION</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">REGION OF RESIDENCE</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CLIENT/TYPE</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SQD SCORE (Avg)</th>
                                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">CITIZEN CHARTER AWARE</th>
@@ -331,8 +363,10 @@
                             </div>
                         </div>
 
-                        <div id="questionsContainer" class="space-y-4">
-                            <!-- Questions will be dynamically loaded here -->
+                        <div id="questionsContainerWrapper" class="max-h-[60vh] overflow-y-auto pr-3">
+                            <div id="questionsContainer" class="space-y-4">
+                                <!-- Questions will be dynamically loaded here -->
+                            </div>
                         </div>
 
                         <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-600 mt-6">
@@ -363,26 +397,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Jhairon Clarence</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">clarence@gmail.com</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Admin</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="status-active">Active</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                            <button class="text-blue-600 hover:text-blue-800"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
-                                            <button class="text-red-600 hover:text-red-800"><i data-lucide="trash" class="w-5 h-5"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Admin User 2</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">admin2@arta.gov</td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Admin</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="status-pending">Pending</span></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                                            <button class="text-blue-600 hover:text-blue-800"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
-                                            <button class="text-red-600 hover:text-red-800"><i data-lucide="trash" class="w-5 h-5"></i></button>
-                                        </td>
-                                    </tr>
+                                    <!-- Admin users loaded from Firestore dynamically -->
                                 </tbody>
                             </table>
                         </div>
@@ -624,7 +639,8 @@
     <script type="module">
         // --- Firestore Integration ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where, getDocs, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
         
         // Firebase Configuration
         const firebaseConfig = {
@@ -640,11 +656,26 @@
         // Initialize Firebase
         const firebaseApp = initializeApp(firebaseConfig);
         const db = getFirestore(firebaseApp);
+        const auth = getAuth(firebaseApp);
+
+        console.log('[admin.html] Firebase initialized, project:', firebaseConfig.projectId);
 
         // Store Firestore references globally for use in other scripts
         window.db = db;
         window.collection = collection;
         window.onSnapshot = onSnapshot;
+        window.getDocs = getDocs;
+        window.getDoc = getDoc;
+        window.query = query;
+        window.where = where;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.deleteDoc = deleteDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.auth = auth;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.sendEmailVerification = sendEmailVerification;
+        window.FIREBASE_API_KEY = firebaseConfig.apiKey;
         window.allSurveyResponses = []; // Store all responses for export functions
 
         // Helper function to safely update DOM elements
@@ -656,6 +687,109 @@
                 console.warn(`Element with id '${id}' not found`);
             }
         }
+
+        // --- ADMIN AUTHENTICATION ---
+        // Function to validate admin credentials against Firestore
+        async function validateAdminLogin(email, password) {
+            try {
+                // First try to sign in with Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+
+                // Primary check: try to read admin document by UID (this matches security rules
+                // that require admin_documents to be keyed by the user's UID).
+                try {
+                    const adminDocRef = doc(db, 'admin_users', user.uid);
+                    const adminDocSnap = await getDoc(adminDocRef);
+                    if (adminDocSnap.exists()) {
+                        const adminData = adminDocSnap.data();
+                        
+                                                // Check email verification status - skip for super_admin, required for others
+                                                if (!user.emailVerified && adminData.role !== 'super_admin') {
+                                                    return { success: false, message: 'Please verify your email before accessing the system.' };
+                                                }
+                        
+                        // Update status to 'active' if email is now verified
+                        if (user.emailVerified && adminData.status === 'pending') {
+                            await setDoc(adminDocRef, { status: 'active' }, { merge: true });
+                        }
+                        
+                        if (adminData.isActive === false) {
+                            return { success: false, message: 'Your admin account is inactive. Contact super admin.' };
+                        }
+                        return {
+                            success: true,
+                            user: {
+                                email: user.email,
+                                uid: user.uid,
+                                role: adminData.role || 'admin',
+                                name: adminData.name || 'Admin User',
+                                permissions: adminData.permissions || []
+                            }
+                        };
+                    }
+                } catch (uidErr) {
+                    // Log and continue to fallback query by email
+                    console.warn('UID lookup failed or blocked by rules, will fallback to email query', uidErr && uidErr.code ? uidErr.code : uidErr);
+                }
+
+                // Fallback: some projects store admin documents keyed by auto-id or email
+                // Query admin_users collection by email as a fallback (may be blocked by strict rules)
+                const adminUsersRef = collection(db, "admin_users");
+                const q = query(adminUsersRef, where("email", "==", email));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    console.warn("User not found in admin_users collection");
+                    return { success: false, message: "You are not authorized as an admin." };
+                }
+
+                const adminData = querySnapshot.docs[0].data();
+                // Check if admin is active/enabled
+                if (adminData.isActive === false) {
+                    return { success: false, message: "Your admin account is inactive. Contact super admin." };
+                }
+
+                return {
+                    success: true,
+                    user: {
+                        email: user.email,
+                        uid: user.uid,
+                        role: adminData.role || "admin",
+                        name: adminData.name || "Admin User",
+                        permissions: adminData.permissions || []
+                    }
+                };
+            } catch (error) {
+                console.error("Login error:", error && error.code ? error.code : error, error && error.message ? error.message : error);
+
+                // Map known Firebase error codes to user-friendly messages
+                if (error && error.code) {
+                    switch(error.code) {
+                        case "auth/invalid-email":
+                            return { success: false, message: "Invalid email format." };
+                        case "auth/user-disabled":
+                            return { success: false, message: "This account has been disabled." };
+                        case "auth/user-not-found":
+                            return { success: false, message: "Email not found. Invalid credentials." };
+                        case "auth/wrong-password":
+                            return { success: false, message: "Incorrect password." };
+                        case "auth/too-many-requests":
+                            return { success: false, message: "Too many failed login attempts. Try again later." };
+                        case "permission-denied":
+                            return { success: false, message: "Server permission denied when checking admin role. Verify Firestore rules and admin_users document ID (should be the user UID)." };
+                        default:
+                            return { success: false, message: "Invalid email or password." };
+                    }
+                }
+
+                return { success: false, message: "Invalid email or password." };
+            }
+        }
+
+        // Expose the function to non-module scripts (login handler in plain <script> needs access)
+        window.validateAdminLogin = validateAdminLogin;
 
         // Initialize real-time listeners with a slight delay to ensure DOM is ready
         setTimeout(() => {
@@ -858,7 +992,7 @@
     <script>
         // --- Configuration ---
         const SUPER_ADMIN_EMAIL = 'super@admin.com';
-        const SUPER_ADMIN_PASSWORD = 'password123';
+        const SUPER_ADMIN_PASSWORD = 'SuperAdmin@2024!';
         
         // --- Element Selection ---
         const app = document.getElementById('app');
@@ -874,6 +1008,108 @@
         const showAddUserBtn = document.getElementById('showAddUserBtn'); // NEW
         const addUserForm = document.getElementById('addUserForm'); // NEW
         const goBackBtn = document.getElementById('goBackBtn'); // NEW
+
+        // Loading overlay for login (reusable spinner)
+        let loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.className = 'loader-overlay';
+        loadingOverlay.innerHTML = '<div class="loader-wrap"><div class="loader-spinner" aria-hidden="true"></div><div class="loader-text" id="loaderText">Loading…</div></div>';
+
+        function showLoader(text = 'Loading…') {
+            try {
+                const txt = loadingOverlay.querySelector('#loaderText');
+                if (txt) txt.textContent = text;
+            } catch (e) { /* ignore */ }
+            if (!document.body.contains(loadingOverlay)) document.body.appendChild(loadingOverlay);
+            loadingOverlay.style.display = 'flex';
+        }
+        function hideLoader() {
+            try {
+                loadingOverlay.style.display = 'none';
+                if (document.body.contains(loadingOverlay)) document.body.removeChild(loadingOverlay);
+            } catch (e) { /* ignore */ }
+        }
+
+        // User dropdown behavior
+        document.addEventListener('click', function(e) {
+            const userDropdown = document.getElementById('userDropdown');
+            if (!userDropdown) return;
+            // If click is outside the user menu, hide the dropdown
+            const userMenu = document.getElementById('userMenu');
+            if (userMenu && !userMenu.contains(e.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+
+        // Modal helper functions
+        function showModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.remove('hidden-modal'); }
+        function hideModal(modalId) { const m = document.getElementById(modalId); if (m) m.classList.add('hidden-modal'); }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Forgot password modal
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showModal('forgotPasswordModal');
+                });
+            }
+            const closeForgotPasswordModal = document.getElementById('closeForgotPasswordModal');
+            if (closeForgotPasswordModal) {
+                closeForgotPasswordModal.addEventListener('click', function() { hideModal('forgotPasswordModal'); });
+            }
+            const forgotPasswordBackdrop = document.getElementById('forgotPasswordBackdrop');
+            if (forgotPasswordBackdrop) {
+                forgotPasswordBackdrop.addEventListener('click', function() { hideModal('forgotPasswordModal'); });
+            }
+
+            // User menu and logout
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userDropdown = document.getElementById('userDropdown');
+            if (userMenuButton && userDropdown) {
+                userMenuButton.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+            }
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showModal('logoutConfirmModal');
+                });
+            }
+
+            // Logout confirmation modal
+            const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+            if (cancelLogoutBtn) {
+                cancelLogoutBtn.addEventListener('click', function() { hideModal('logoutConfirmModal'); });
+            }
+            const logoutConfirmBackdrop = document.getElementById('logoutConfirmBackdrop');
+            if (logoutConfirmBackdrop) {
+                logoutConfirmBackdrop.addEventListener('click', function() { hideModal('logoutConfirmModal'); });
+            }
+            const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+            if (confirmLogoutBtn) {
+                confirmLogoutBtn.addEventListener('click', function() {
+                    // Perform actual logout
+                    function _finalize() { try { localStorage.clear(); } catch (e) {} window.location.reload(); }
+                    try {
+                        if (window.auth && typeof window.signOut === 'function') {
+                            window.signOut(window.auth).then(_finalize).catch(_finalize);
+                            return;
+                        }
+                    } catch(e){}
+                    try {
+                        if (window.firebase && window.firebase.auth) {
+                            window.firebase.auth().signOut().then(_finalize).catch(_finalize);
+                            return;
+                        }
+                    } catch(e){}
+                    _finalize();
+                });
+            }
+        });
 
         let currentView = 'dashboard';
 
@@ -979,10 +1215,21 @@
                 if (viewId === 'dashboard') {
                     initCharts();
                 }
-                
+
                 // Special case: Load questions on manage-questions load
                 if (viewId === 'manage-questions') {
-                    loadSurveyQuestions();
+                    // Ensure defaults exist, then render questions (ensures automatic population)
+                    ensureDefaultQuestionsExist().then(() => {
+                        loadSurveyQuestions();
+                    }).catch((e) => {
+                        console.warn('ensureDefaultQuestionsExist failed:', e);
+                        loadSurveyQuestions();
+                    });
+                }
+
+                // Special case: Load admin users on user-management load
+                if (viewId === 'user-management') {
+                    try { loadAdminUsers(); } catch (e) { console.warn('Could not start admin_users listener on navigation', e); }
                 }
             }
 
@@ -1014,6 +1261,15 @@
                 loginView.classList.add('hidden');
                 dashboardView.classList.remove('hidden');
                 navigateTo('dashboard'); // Default to dashboard home
+                // Ensure charts are initialized and updated after login
+                setTimeout(() => {
+                    if (typeof window.updateMetrics === 'function' && window.allSurveyResponses) {
+                        window.updateMetrics(window.allSurveyResponses);
+                    }
+                    if (typeof window.updateCharts === 'function' && window.allSurveyResponses) {
+                        window.updateCharts(window.allSurveyResponses);
+                    }
+                }, 200);
             } else {
                 dashboardView.classList.add('hidden');
                 loginView.classList.remove('hidden');
@@ -1083,30 +1339,127 @@
          * Initialize survey questions from Firestore with real-time listener
          */
         function initializeSurveyQuestionsFromFirestore() {
-            const db = firebase.firestore();
-            const questionsRef = db.collection('survey_questions');
-
-            // Real-time listener for questions
-            questionsRef.orderBy('order', 'asc').onSnapshot((snapshot) => {
-                window.allSurveyQuestions = [];
-                snapshot.forEach((doc) => {
-                    window.allSurveyQuestions.push({
-                        id: doc.id,
-                        code: doc.data().code || '',
-                        text: doc.data().text || '',
-                        type: doc.data().type || 'SQD',
-                        required: doc.data().required || true,
-                        order: doc.data().order || 0
-                    });
-                });
-                console.log('Questions synced from Firestore:', window.allSurveyQuestions.length);
-                // Refresh UI if manage-questions tab is active
-                if (document.getElementById('manage-questions') && !document.getElementById('manage-questions').classList.contains('hidden')) {
-                    loadSurveyQuestions();
+            try {
+                if (!window.db || !window.collection || !window.onSnapshot) {
+                    console.warn('Firestore modular APIs not yet available for initializeSurveyQuestionsFromFirestore');
+                    return;
                 }
-            }, (error) => {
-                console.error('Error loading questions:', error);
-            });
+
+                const questionsRef = window.collection(window.db, 'survey_questions');
+
+                // Real-time listener for questions (use modular onSnapshot)
+                window.onSnapshot(questionsRef, (snapshot) => {
+                    window.allSurveyQuestions = [];
+                    snapshot.forEach((docSnap) => {
+                        const data = typeof docSnap.data === 'function' ? docSnap.data() : (docSnap.data || {});
+                        window.allSurveyQuestions.push({
+                            id: docSnap.id,
+                            code: data.code || '',
+                            text: data.text || '',
+                            type: data.type || 'SQD',
+                            required: typeof data.required === 'boolean' ? data.required : true,
+                            order: typeof data.order === 'number' ? data.order : 0
+                        });
+                    });
+
+                    // Ensure deterministic ordering
+                    window.allSurveyQuestions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                    console.log('Questions synced from Firestore:', window.allSurveyQuestions.length);
+
+                    // Refresh UI if manage-questions tab is active
+                    if (document.getElementById('manage-questions') && !document.getElementById('manage-questions').classList.contains('hidden')) {
+                        loadSurveyQuestions();
+                    }
+                }, (error) => {
+                    console.error('Error loading questions:', error);
+                });
+            } catch (err) {
+                console.error('initializeSurveyQuestionsFromFirestore error:', err);
+            }
+        }
+
+        /**
+         * Modular-safe initializer: add default questions using modular Firestore API
+         * This works with the `db`, `doc`, `getDoc`, `setDoc`, `collection`, and `getDocs` imports
+         */
+        async function initializeDefaultSurveyQuestionsModular() {
+            try {
+                const questionsCol = window.collection ? window.collection(window.db, 'survey_questions') : null;
+
+                const defaultQuestions = [
+                    { code: 'SQD0', text: 'I am satisfied with the service that I availed.', type: 'SQD', required: true, order: 0 },
+                    { code: 'SQD1', text: 'I spent a reasonable amount of time for my transaction.', type: 'SQD', required: true, order: 1 },
+                    { code: 'SQD2', text: 'The office followed the transaction\'s requirements and steps based on the information provided.', type: 'SQD', required: true, order: 2 },
+                    { code: 'SQD3', text: 'The steps (including payment) I needed to do for my transaction were easy and simple.', type: 'SQD', required: true, order: 3 },
+                    { code: 'SQD4', text: 'I easily found information about my transaction from the office or its website.', type: 'SQD', required: true, order: 4 },
+                    { code: 'SQD5', text: 'I paid a reasonable amount of fees for my transaction. (If service was free, mark the \'N/A\' option)', type: 'SQD', required: true, order: 5 },
+                    { code: 'SQD6', text: 'I feel the office was fair to everyone, or \'walang palakasan\', during my transaction.', type: 'SQD', required: true, order: 6 },
+                    { code: 'SQD7', text: 'I was treated courteously by the staff, and (if asked for help) the staff was helpful.', type: 'SQD', required: true, order: 7 },
+                    { code: 'SQD8', text: 'I got what I needed from the government office, or if denied, the reason was explained to me clearly.', type: 'SQD', required: true, order: 8 },
+                    { code: 'CC1', text: 'Which of the following best describes your awareness of a CC?', type: 'CC', required: true, order: 9 },
+                    { code: 'CC2', text: 'If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was easy to see?', type: 'CC', required: true, order: 10 },
+                    { code: 'CC3', text: 'If aware of the CC (answered 1–3 in CC1), would you say that the CC of this office was helpful?', type: 'CC', required: true, order: 11 }
+                ];
+
+                let added = 0;
+                for (const q of defaultQuestions) {
+                    const docId = q.code.toLowerCase();
+                    const qDocRef = window.doc ? window.doc(window.db, 'survey_questions', docId) : null;
+                    const snap = window.getDoc ? await window.getDoc(qDocRef) : null;
+                    if (!snap || !snap.exists || !snap.exists()) {
+                        if (window.setDoc && qDocRef) {
+                            await window.setDoc(qDocRef, {
+                                code: q.code,
+                                text: q.text,
+                                type: q.type,
+                                required: q.required,
+                                order: q.order,
+                                createdAt: window.serverTimestamp ? window.serverTimestamp() : null
+                            });
+                        } else if (window.db && window.firebase && window.firebase.firestore) {
+                            // Fallback to namespaced SDK if available
+                            const nsDb = window.firebase.firestore();
+                            await nsDb.collection('survey_questions').doc(docId).set({
+                                code: q.code,
+                                text: q.text,
+                                type: q.type,
+                                required: q.required,
+                                order: q.order,
+                                createdAt: new Date()
+                            });
+                        }
+                        added++;
+                    }
+                }
+
+                console.log(`Default questions initializer finished. Added: ${added}`);
+                if (added > 0) {
+                    alert(`Default questions added: ${added}`);
+                } else {
+                    alert('Default questions already present. No changes made.');
+                }
+            } catch (error) {
+                console.error('Error initializing default questions (modular):', error);
+                alert('Error initializing default questions: ' + (error.message || error));
+            }
+        }
+
+        /**
+         * Check collection and add defaults if empty
+         */
+        async function ensureDefaultQuestionsExist() {
+            try {
+                const qSnapshot = window.getDocs && window.collection ? await window.getDocs(window.collection(window.db, 'survey_questions')) : null;
+                if (!qSnapshot || qSnapshot.size === 0) {
+                    console.log('No survey_questions found — initializing defaults...');
+                    await initializeDefaultSurveyQuestionsModular();
+                } else {
+                    console.log('survey_questions collection already populated:', qSnapshot.size);
+                }
+            } catch (err) {
+                console.error('Error checking survey_questions collection:', err);
+            }
         }
 
         /**
@@ -1279,18 +1632,40 @@
             const updatedType = document.getElementById('editQuestionType').value;
             const updatedRequired = document.getElementById('editQuestionRequired').checked;
 
-            const db = firebase.firestore();
-            db.collection('survey_questions').doc(questionId).update({
-                text: updatedText,
-                type: updatedType,
-                required: updatedRequired
-            }).then(() => {
-                closeEditQuestionModal();
-                alert('Question updated successfully!');
-            }).catch((error) => {
-                console.error('Error updating question:', error);
-                alert('Error updating question: ' + error.message);
-            });
+            (async () => {
+                try {
+                    if (window.setDoc && window.doc) {
+                        const qRef = window.doc(window.db, 'survey_questions', questionId);
+                        await window.setDoc(qRef, {
+                            text: updatedText,
+                            type: updatedType,
+                            required: updatedRequired,
+                            updatedAt: window.serverTimestamp ? window.serverTimestamp() : null
+                        }, { merge: true });
+                        closeEditQuestionModal();
+                        alert('Question updated successfully!');
+                        return;
+                    }
+
+                    // Fallback to namespaced SDK
+                    if (window.firebase && window.firebase.firestore) {
+                        const nsDb = window.firebase.firestore();
+                        await nsDb.collection('survey_questions').doc(questionId).update({
+                            text: updatedText,
+                            type: updatedType,
+                            required: updatedRequired
+                        });
+                        closeEditQuestionModal();
+                        alert('Question updated successfully!');
+                        return;
+                    }
+
+                    throw new Error('No Firestore API available to update question');
+                } catch (error) {
+                    console.error('Error updating question:', error);
+                    alert('Error updating question: ' + (error.message || error));
+                }
+            })();
         }
 
         /**
@@ -1316,38 +1691,79 @@
                 return;
             }
 
-            const db = firebase.firestore();
+
             const docId = code.toLowerCase();
             const maxOrder = window.allSurveyQuestions.length > 0 
                 ? Math.max(...window.allSurveyQuestions.map(q => q.order || 0)) + 1
                 : window.allSurveyQuestions.length;
-            
-            db.collection('survey_questions').doc(docId).set({
-                code: code,
-                text: text,
-                type: type,
-                required: required,
-                order: maxOrder
-            }).then(() => {
-                closeAddQuestionModal();
-                alert('Question added successfully!');
-            }).catch((error) => {
-                console.error('Error adding question:', error);
-                alert('Error adding question: ' + error.message);
-            });
+
+            (async () => {
+                try {
+                    if (window.setDoc && window.doc) {
+                        const qRef = window.doc(window.db, 'survey_questions', docId);
+                        await window.setDoc(qRef, {
+                            code: code,
+                            text: text,
+                            type: type,
+                            required: required,
+                            order: maxOrder,
+                            createdAt: window.serverTimestamp ? window.serverTimestamp() : null
+                        });
+                        closeAddQuestionModal();
+                        alert('Question added successfully!');
+                        return;
+                    }
+
+                    // Fallback to namespaced SDK
+                    if (window.firebase && window.firebase.firestore) {
+                        const nsDb = window.firebase.firestore();
+                        await nsDb.collection('survey_questions').doc(docId).set({
+                            code: code,
+                            text: text,
+                            type: type,
+                            required: required,
+                            order: maxOrder,
+                            createdAt: new Date()
+                        });
+                        closeAddQuestionModal();
+                        alert('Question added successfully!');
+                        return;
+                    }
+
+                    throw new Error('No Firestore API available to add question');
+                } catch (error) {
+                    console.error('Error adding question:', error);
+                    alert('Error adding question: ' + (error.message || error));
+                }
+            })();
         }
 
         /**
          * Delete question from Firestore
          */
         function deleteQuestion(questionId) {
-            const db = firebase.firestore();
-            db.collection('survey_questions').doc(questionId).delete().then(() => {
-                alert('Question deleted successfully!');
-            }).catch((error) => {
-                console.error('Error deleting question:', error);
-                alert('Error deleting question: ' + error.message);
-            });
+            (async () => {
+                try {
+                    if (window.deleteDoc && window.doc) {
+                        const qRef = window.doc(window.db, 'survey_questions', questionId);
+                        await window.deleteDoc(qRef);
+                        alert('Question deleted successfully!');
+                        return;
+                    }
+
+                    if (window.firebase && window.firebase.firestore) {
+                        const nsDb = window.firebase.firestore();
+                        await nsDb.collection('survey_questions').doc(questionId).delete();
+                        alert('Question deleted successfully!');
+                        return;
+                    }
+
+                    throw new Error('No Firestore API available to delete question');
+                } catch (error) {
+                    console.error('Error deleting question:', error);
+                    alert('Error deleting question: ' + (error.message || error));
+                }
+            })();
         }
 
         /**
@@ -1698,7 +2114,8 @@
         if (setupQuestionsBtn) {
             setupQuestionsBtn.addEventListener('click', function() {
                 if (confirm('This will load all default ARTA survey questions into Firestore. Existing questions will be skipped. Continue?')) {
-                    initializeDefaultSurveyQuestions();
+                    // Use the modular-safe initializer below (works with getFirestore)
+                    initializeDefaultSurveyQuestionsModular();
                 }
             });
         }
@@ -1729,18 +2146,142 @@
 
         // --- Event Listeners ---
         
-        // 1. Login Form Submission
-        loginForm.addEventListener('submit', function(event) {
+        // 1. Login Form Submission with Validation
+        loginForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            const email = document.getElementById('email').value;
+            
+            // Clear previous errors
+            clearLoginErrors();
+            
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-
-            if (email === SUPER_ADMIN_EMAIL && password === SUPER_ADMIN_PASSWORD) {
-                toggleAppView(true);
-            } else {
-                loginError.textContent = 'Invalid email or password.';
-                loginError.classList.remove('hidden');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            // Validation
+            let hasError = false;
+            
+            // Email validation
+            if (!email) {
+                showFieldError('emailError', 'Email is required');
+                emailInput.classList.add('border-red-500');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showFieldError('emailError', 'Please enter a valid email address');
+                emailInput.classList.add('border-red-500');
+                hasError = true;
             }
+            
+            // Password validation
+            if (!password) {
+                showFieldError('passwordError', 'Password is required');
+                passwordInput.classList.add('border-red-500');
+                hasError = true;
+            } else if (password.length < 6) {
+                showFieldError('passwordError', 'Password must be at least 6 characters');
+                passwordInput.classList.add('border-red-500');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            // Show loading overlay
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                // Validate admin credentials with Firebase
+                const result = await validateAdminLogin(email, password);
+                console.log('validateAdminLogin result:', result);
+                
+                if (result.success) {
+                    // Store user session
+                    sessionStorage.setItem('adminUser', JSON.stringify(result.user));
+                    sessionStorage.setItem('adminSessionTime', new Date().getTime());
+                    
+                    // Hide loading overlay and show dashboard
+                    if (document.body.contains(loadingOverlay)) {
+                        document.body.removeChild(loadingOverlay);
+                    }
+                    
+                    // Show success message
+                    const loginError = document.getElementById('loginError');
+                    loginError.textContent = `Welcome, ${result.user.name}!`;
+                    loginError.classList.remove('hidden');
+                    loginError.classList.remove('text-red-600');
+                    loginError.classList.add('text-green-600');
+                    
+                    setTimeout(() => {
+                        toggleAppView(true);
+                    }, 500);
+                } else {
+                    // Show error message
+                    if (document.body.contains(loadingOverlay)) {
+                        document.body.removeChild(loadingOverlay);
+                    }
+                    
+                    showFieldError('loginError', result.message);
+                    document.getElementById('loginError').classList.add('text-red-600');
+                    
+                    // Highlight password field for general auth errors
+                    if (result.message.includes('Invalid') || result.message.includes('password')) {
+                        passwordInput.classList.add('border-red-500');
+                    }
+                }
+            } catch (error) {
+                console.error('Login error (unexpected):', error);
+                if (document.body.contains(loadingOverlay)) {
+                    document.body.removeChild(loadingOverlay);
+                }
+                // Surface the underlying message when possible to aid debugging.
+                const message = (error && (error.message || error.code)) ? (error.message || error.code) : 'An error occurred. Please try again.';
+                showFieldError('loginError', message);
+                document.getElementById('loginError').classList.add('text-red-600');
+            }
+        });
+
+        // Helper function to validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Helper function to show field errors
+        function showFieldError(errorElementId, message) {
+            const errorElement = document.getElementById(errorElementId);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+        }
+
+        // Helper function to clear all login errors
+        function clearLoginErrors() {
+            const emailError = document.getElementById('emailError');
+            const passwordError = document.getElementById('passwordError');
+            const loginError = document.getElementById('loginError');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            if (emailError) emailError.classList.add('hidden');
+            if (passwordError) passwordError.classList.add('hidden');
+            if (loginError) loginError.classList.add('hidden');
+            emailInput.classList.remove('border-red-500');
+            passwordInput.classList.remove('border-red-500');
+            emailInput.classList.add('border-gray-300');
+            passwordInput.classList.add('border-gray-300');
+        }
+
+        // Clear errors when user starts typing
+        document.getElementById('email').addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            this.classList.add('border-gray-300');
+            document.getElementById('emailError').classList.add('hidden');
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            this.classList.remove('border-red-500');
+            this.classList.add('border-gray-300');
+            document.getElementById('passwordError').classList.add('hidden');
         });
 
         // 2. Sidebar Navigation Clicks
@@ -1767,27 +2308,227 @@
             navigateTo('user-management');
         });
 
-        // 6. NEW: Add User Form Submission with Validation and Pop-up
-        addUserForm.addEventListener('submit', function(event) {
+        // 6. NEW: Add User Form Submission with Validation -> Invite flow
+        addUserForm.addEventListener('submit', async function(event) {
             event.preventDefault();
 
-            if (validateAddUserForm()) {
-                // Mock: Successful invitation
-                const firstName = document.getElementById('firstName').value.trim();
-                const lastName = document.getElementById('lastName').value.trim();
-                const role = document.getElementById('userRole').value;
-                
-                // Show a simple success alert (pop-up)
-                alert(`Successfully invited user: ${firstName} ${lastName} as a ${role}.`);
+            if (!validateAddUserForm()) return;
 
-                // Clear the form and errors
-                addUserForm.reset();
-                clearAddUserErrors();
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const role = document.getElementById('userRole').value;
 
-                // Go back to the Manage Users dashboard
-                navigateTo('user-management');
+            // Generate a temporary password for the invited user
+            const tempPassword = generateTempPassword();
+
+            // Show loading overlay
+            document.body.appendChild(loadingOverlay);
+
+            try {
+                const inviteResult = await inviteUser({ email, password: tempPassword, name: `${firstName} ${lastName}`, role });
+
+                if (inviteResult.success) {
+                    alert(
+                        `✓ User invited successfully!\n\n` +
+                        `Email: ${email}\n` +
+                        `Role: ${role}\n` +
+                        `Temporary Password: ${inviteResult.tempPassword}\n\n` +
+                        `📧 A verification email has been sent to ${email}.\n\n` +
+                        `⚠️ Important:\n` +
+                        `1. The user MUST verify their email before logging in\n` +
+                        `2. Share the temporary password through a secure channel\n` +
+                        `3. The user should change their password after first login\n` +
+                        `4. Account status will be "pending" until email is verified`
+                    );
+
+                    // Clear form and refresh users
+                    addUserForm.reset();
+                    clearAddUserErrors();
+
+                    // Return to user management view
+                    navigateTo('user-management');
+                } else {
+                    alert('Failed to invite user: ' + (inviteResult.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Invite error:', err);
+                alert('Error inviting user: ' + (err && err.message ? err.message : err));
+            } finally {
+                if (document.body.contains(loadingOverlay)) document.body.removeChild(loadingOverlay);
             }
         });
+
+        // Helper: generate a secure temporary password
+        function generateTempPassword(len = 12) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()-_=+';
+            let out = '';
+            for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+            return out;
+        }
+
+        // Invite user: Create Auth user, send verification email, and create admin_users/<uid> doc
+        async function inviteUser({ email, password, name, role }) {
+            try {
+                // Step 1: Create Firebase Auth user with email and password
+                const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                const user = userCredential.user;
+                const uid = user.uid;
+
+                // Step 2: Send verification email automatically
+                try {
+                    await window.sendEmailVerification(user);
+                    console.log('Verification email sent to:', email);
+                } catch (emailErr) {
+                    console.warn('Could not send verification email (user may still proceed):', emailErr);
+                }
+
+                // Step 3: Create admin_users document keyed by UID with pending status
+                const ROLE_PERMISSIONS = {
+                    'super_admin': ['all'],
+                    'admin': ['view_responses','export_data','manage_questions','manage_users'],
+                    'data_analyst': ['view_responses','export_data'],
+                    'survey_manager': ['manage_questions']
+                };
+
+                const permissions = ROLE_PERMISSIONS[role] || [];
+
+                await window.setDoc(window.doc(window.db, 'admin_users', uid), {
+                    email: email,
+                    name: name || '',
+                    role: role,
+                    isActive: false, // Will be set to true after email verification
+                    status: 'pending',
+                    permissions: permissions,
+                    createdAt: window.serverTimestamp()
+                });
+
+                return { success: true, uid, tempPassword: password };
+            } catch (error) {
+                console.error('inviteUser error:', error);
+                
+                // Handle specific Firebase Auth errors
+                if (error.code === 'auth/email-already-in-use') {
+                    return { success: false, message: 'This email is already registered.' };
+                } else if (error.code === 'auth/weak-password') {
+                    return { success: false, message: 'Password is too weak. Use at least 6 characters.' };
+                }
+
+                // Detect permission-denied when trying to write admin_users (common if rules restrict writes)
+                if (error && (error.code === 'permission-denied' || (error.message && error.message.toLowerCase().includes('missing or insufficient permissions')))) {
+                    return { success: false, message: 'Missing or insufficient permissions when creating admin user. Update Firestore rules to allow super_admin to create admin_users documents, or use a server-side admin function.' };
+                }
+
+                return { success: false, message: error && error.message ? error.message : String(error) };
+            }
+        }
+
+        // Load admin users from Firestore and render in User Management
+        function loadAdminUsers() {
+            try {
+                // If an existing listener is active, unsubscribe first to avoid duplicates
+                if (window._adminUsersUnsub && typeof window._adminUsersUnsub === 'function') {
+                    try { window._adminUsersUnsub(); } catch (e) { console.warn('Failed to unsubscribe previous admin_users listener', e); }
+                }
+
+                const usersRef = window.collection(window.db, 'admin_users');
+                // Save unsubscribe function so we can stop listening later if needed
+                window._adminUsersUnsub = window.onSnapshot(usersRef, (snapshot) => {
+                    console.log('[admin.html] admin_users snapshot received, docCount=', snapshot.size);
+                    const rows = [];
+                    snapshot.forEach(docSnap => {
+                        const d = docSnap.data();
+                        rows.push({ id: docSnap.id, ...d });
+                    });
+                    console.log('[admin.html] admin_users parsed rows=', rows.length);
+                    renderAdminUsers(rows);
+                }, (err) => {
+                    console.error('[admin.html] admin_users snapshot error', err);
+                    // Show friendly UI message in the table area when permission denied or other errors occur
+                    const tbody = document.querySelector('#user-management table tbody');
+                    if (tbody) {
+                        const msg = (err && err.code === 'permission-denied') ? 'Permission denied: check Firestore rules and ensure your account has rights to read admin_users.' : 'Error loading admin users.';
+                        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-red-500">${msg}</td></tr>`;
+                    }
+                });
+            } catch (err) {
+                console.error('loadAdminUsers error', err);
+            }
+        }
+
+        function renderAdminUsers(users) {
+            const tbody = document.querySelector('#user-management table tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">No admin users found</td></tr>';
+                return;
+            }
+
+            users.forEach(u => {
+                const statusLabel = u.isActive ? '<span class="status-active">Active</span>' : `<span class="status-pending">Pending</span>`;
+                const roleBadge = `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${u.role || 'admin'}</span>`;
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${u.name || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${u.email || ''}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${roleBadge}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${statusLabel}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <button class="text-blue-600 hover:text-blue-800 edit-admin-btn" data-uid="${u.id}"><i data-lucide="square-pen" class="w-5 h-5"></i></button>
+                        <button class="text-red-600 hover:text-red-800 delete-admin-btn" data-uid="${u.id}"><i data-lucide="trash" class="w-5 h-5"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Recreate lucide icons for dynamic buttons
+            if (window.lucide) lucide.createIcons();
+
+            // Attach handlers
+            document.querySelectorAll('.delete-admin-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const uid = this.dataset.uid;
+                    showConfirmationModal('Delete Admin', 'Are you sure you want to delete this admin?', async () => {
+                        try {
+                            await window.collection(window.db, 'admin_users');
+                            // Delete Firestore doc
+                            await window.deleteDoc(window.doc(window.db,'admin_users', uid));
+                        } catch (e) {
+                            console.error('Error deleting admin doc', e);
+                            alert('Failed to delete admin user.');
+                        }
+                    });
+                });
+            });
+
+            document.querySelectorAll('.edit-admin-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const uid = this.dataset.uid;
+                    // Open edit modal or navigate to add-user-form with filled values (left as TODO)
+                    alert('Edit admin feature not implemented yet. UID: ' + uid);
+                });
+            });
+        }
+
+        // Start listening for admin users only after auth state is known (avoid permission-denied when unauthenticated)
+        try {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    try { loadAdminUsers(); } catch (e) { console.warn('Could not start admin_users listener after sign-in', e); }
+                } else {
+                    // If user signed out, clear any existing table and unsubscribe
+                    const tbody = document.querySelector('#user-management table tbody');
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Please sign in to view admin users</td></tr>';
+                    if (window._adminUsersUnsub && typeof window._adminUsersUnsub === 'function') {
+                        try { window._adminUsersUnsub(); } catch (e) { /* ignore */ }
+                        window._adminUsersUnsub = null;
+                    }
+                }
+            });
+        } catch (e) { console.warn('Could not attach auth state listener for admin_users', e); }
 
         // 7. Export CSV Button
         const exportAllCsvBtn = document.getElementById('exportAllCsvBtn');
@@ -1831,18 +2572,54 @@
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             // Show login view by default (do not bypass login)
-            toggleAppView(true);
+            toggleAppView(false);
             
             // Initialize survey questions from Firestore with real-time listener
             initializeSurveyQuestionsFromFirestore();
             
-            // Load default questions if Firestore is empty (first time setup)
-            loadDefaultQuestionsToFirestore();
+            // Ensure default questions exist when admin loads (modular-safe)
+            // We call this after the real-time listener is set so UI updates automatically
+            ensureDefaultQuestionsExist();
         });
 
         // Ensure lucide icons are created on first load for the login view
         lucide.createIcons();
 
     </script>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="hidden-modal">
+        <div class="modal-backdrop" id="forgotPasswordBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">Forgot Password</div>
+            <div class="modal-body">
+                <p class="mb-3">If you have forgotten your password, please reach out to the System Administrator.</p>
+                <p class="mb-3"><strong>Contact Information:</strong></p>
+                <p>Email: <a href="mailto:admin@arta.gov.ph" class="text-blue-600 hover:text-blue-500">admin@arta.gov.ph</a></p>
+                <p>Hotline: +63 (2) 8123-ARTA</p>
+                <p class="mt-4 text-sm text-gray-500">Please provide your email address and a brief description of the issue when contacting support.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="closeForgotPasswordModal" class="modal-btn modal-btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutConfirmModal" class="hidden-modal">
+        <div class="modal-backdrop" id="logoutConfirmBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">Confirm Logout</div>
+            <div class="modal-body">
+                <p>Are you sure you want to log out? Any unsaved changes may be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancelLogoutBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+                <button type="button" id="confirmLogoutBtn" class="modal-btn modal-btn-danger">Yes, Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./rbac.js"></script>
 </body>
 </html>

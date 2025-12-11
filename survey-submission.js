@@ -23,6 +23,153 @@ import {
   markSubmissionTime
 } from './firebase-config.js';
 
+// Import Firestore helpers for real-time listener
+import { collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { db } from './firebase-config.js';
+
+/**
+ * Real-time listener for survey questions.
+ * Keeps `window.allSurveyQuestions` and `sqdQuestions` in sync with Firestore.
+ */
+function initializeSurveyQuestionsListener() {
+  try {
+    if (!db || !onSnapshot) return;
+
+    const questionsRef = collection(db, 'survey_questions');
+    const q = query(questionsRef, orderBy('order', 'asc'));
+
+    onSnapshot(q, (snapshot) => {
+      const all = [];
+      const sqd = [];
+      snapshot.forEach(doc => {
+        const data = doc.data ? doc.data() : doc.data;
+        const item = {
+          id: doc.id,
+          code: data.code || '',
+          text: data.text || '',
+          type: data.type || 'SQD',
+          required: typeof data.required === 'boolean' ? data.required : true,
+          order: typeof data.order === 'number' ? data.order : 0
+        };
+        all.push(item);
+        if (item.type === 'SQD') {
+          sqd.push(`${item.code}. ${item.text}`);
+        }
+      });
+
+      // Expose globally for admin compatibility
+      window.allSurveyQuestions = all;
+      // Update global sqdQuestions used by renderSQDQuestions (script.js)
+      if (sqd.length > 0) {
+        window.sqdQuestions = sqd;
+      } else {
+        // fallback: keep existing if Firestore returns empty
+        window.sqdQuestions = window.sqdQuestions || [];
+      }
+
+      console.log('Survey page: questions updated from Firestore', all.length, 'SQD:', window.sqdQuestions.length);
+
+      // Re-render SQD questions if the container exists
+      if (typeof window.renderSQDQuestions === 'function' && document.getElementById('sqd-questions-container')) {
+        try { window.renderSQDQuestions(); } catch (e) { console.warn('renderSQDQuestions error', e); }
+      }
+      // Also render CC questions into form-2 if present
+      if (typeof renderCCQuestions === 'function') {
+        try { renderCCQuestions(); } catch (e) { console.warn('renderCCQuestions error', e); }
+      }
+    }, (err) => {
+      console.error('Question listener error:', err);
+    });
+  } catch (err) {
+    console.warn('Could not start survey question listener:', err);
+  }
+}
+
+/**
+ * Render CC questions into Form 2 (Citizen's Charter)
+ * This swaps the static labels with texts from Firestore-backed `window.allSurveyQuestions`.
+ */
+function renderCCQuestions() {
+  try {
+    const ccContainer = document.getElementById('cc-questions-container');
+    if (!ccContainer) {
+      console.warn('renderCCQuestions: cc-questions-container not found');
+      return;
+    }
+
+    const ccQuestions = (window.allSurveyQuestions || []).filter(q => String(q.type || '').toUpperCase() === 'CC').sort((a,b) => (a.order||0)-(b.order||0));
+    console.log('renderCCQuestions: building dynamic CC UI for', ccQuestions.length, 'items');
+
+    // Build HTML for all CC questions dynamically
+    let html = '';
+    ccQuestions.forEach((q, idx) => {
+      const fieldName = `cc${idx+1}`;
+      // Determine option set: index 0 -> CC1 options, index 1 -> CC2 options, else CC3-like options
+      let options = [];
+      if (idx === 0) {
+        options = [
+          { value: '1', label: 'I know what a CC is and I saw this office\'s CC' },
+          { value: '2', label: 'I know what a CC is but did NOT see this office\'s CC' },
+          { value: '3', label: 'I learned of the CC only when I saw this office\'s CC' },
+          { value: '4', label: 'I do not know what a CC is and did not see one in this office.' }
+        ];
+      } else if (idx === 1) {
+        options = [
+          { value: 'Easy to see', label: 'Easy to see' },
+          { value: 'Somewhat easy to see', label: 'Somewhat easy to see' },
+          { value: 'Difficult to see', label: 'Difficult to see' },
+          { value: 'Not visible at all', label: 'Not visible at all' },
+          { value: 'Not Applicable', label: 'Not Applicable' }
+        ];
+      } else {
+        options = [
+          { value: 'Helped very much', label: 'Helped very much' },
+          { value: 'Somewhat helped', label: 'Somewhat helped' },
+          { value: 'Did not help', label: 'Did not help' },
+          { value: 'Not Applicable', label: 'Not Applicable' }
+        ];
+      }
+
+      html += `
+        <div class="form-section p-5 rounded-lg" id="${fieldName}-container">
+          <label class="block text-lg font-semibold mb-3">${q.code}. ${q.text} <span class="text-red-500">*</span></label>
+          <div class="space-y-2 text-sm" data-cc-field="${fieldName}">
+      `;
+
+      options.forEach(opt => {
+        const inputId = `${fieldName}-${opt.value.toString().replace(/\s+/g,'-')}`;
+        // For cc1, wire onchange to handleCC1Change so the page can disable subsequent fields
+        const onchange = (idx === 0) ? ` onchange="handleCC1Change(this.value)"` : '';
+        html += `
+            <label class="flex items-center"><input type="radio" name="${fieldName}" value="${opt.value}" id="${inputId}" class="form-radio text-blue-600"${onchange}><span class="ml-2">${opt.label}</span></label>
+        `;
+      });
+
+      html += `
+          </div>
+          <p id="${fieldName}-error" class="text-red-500 text-xs mt-3 hidden"></p>
+        </div>
+      `;
+    });
+
+    // If no ccQuestions found, leave existing content untouched (or show default)
+    if (ccQuestions.length === 0) {
+      console.log('renderCCQuestions: no CC questions defined in Firestore');
+      return;
+    }
+
+    ccContainer.innerHTML = html;
+    // Reattach change listeners (handleCC1Change present globally)
+    if (typeof window.handleCC1Change === 'function') {
+      // Trigger handleCC1Change to apply correct enabling/disabling based on any existing selection
+      const cc1Checked = document.querySelector('#cc-questions-container input[name="cc1"]:checked');
+      if (cc1Checked) window.handleCC1Change(cc1Checked.value);
+    }
+  } catch (err) {
+    console.warn('renderCCQuestions error:', err);
+  }
+}
+
 /**
  * Global survey state
  */
@@ -52,6 +199,14 @@ export function initializeSurveyHandlers() {
   // Render SQD (Service Quality) questions for Form 3
   if (window.renderSQDQuestions) {
     window.renderSQDQuestions();
+  }
+
+  // Start real-time questions listener so admin changes reflect to the survey page
+  initializeSurveyQuestionsListener();
+
+  // Render CC questions initially in case listener didn't run yet
+  if (typeof renderCCQuestions === 'function') {
+    try { renderCCQuestions(); } catch (e) { console.warn('renderCCQuestions init error', e); }
   }
 
   // Privacy checkbox handler
@@ -177,9 +332,27 @@ export function validateFormAndProceed(formNumber) {
     });
 
     // Scroll to first error
-    const firstErrorField = document.querySelector(`[name="${Object.keys(errors)[0]}"]`);
-    if (firstErrorField) {
-      firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const firstFieldName = Object.keys(errors)[0];
+    let elementToScroll = document.querySelector(`[name="${firstFieldName}"]`);
+    // If SQD field, prefer scrolling to the container which shows the question card
+    if (firstFieldName && firstFieldName.startsWith('sqd')) {
+      const container = document.getElementById(`${firstFieldName}-container`);
+      if (container) elementToScroll = container;
+    }
+
+    if (elementToScroll) {
+      try {
+        elementToScroll.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // If it's a radio input, try to focus the first radio in the group
+        if (elementToScroll.name && elementToScroll.type === 'radio') {
+          elementToScroll.focus();
+        } else if (elementToScroll.querySelector) {
+          const firstInput = elementToScroll.querySelector('input, select, textarea');
+          if (firstInput) firstInput.focus();
+        }
+      } catch (e) {
+        // ignore scroll errors
+      }
     }
 
     return false;

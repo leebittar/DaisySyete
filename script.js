@@ -114,7 +114,8 @@ const steps = [
   { id: 'form-4', progress: 90 }
 ];
 
-let sqdQuestions = [
+// Expose SQD questions on the window so other modules (survey-submission.js) can update them
+window.sqdQuestions = window.sqdQuestions || [
   "SQD0. I am satisfied with the service that I availed.",
   "SQD1. I spent a reasonable amount of time for my transaction.",
   "SQD2. The office followed the transaction's requirements and steps based on the information provided.",
@@ -144,8 +145,8 @@ let sqdQuestions = [
             updatedQuestions.push(`${doc.data().code}. ${doc.data().text}`);
           });
           if (updatedQuestions.length > 0) {
-            sqdQuestions = updatedQuestions;
-            console.log('SQD Questions updated from Firestore:', sqdQuestions.length);
+            window.sqdQuestions = updatedQuestions;
+            console.log('SQD Questions updated from Firestore:', window.sqdQuestions.length);
             // Optionally re-render if survey page is active
             if (typeof renderSQDQuestions === 'function' && document.getElementById('sqd-questions-container')) {
               renderSQDQuestions();
@@ -187,7 +188,7 @@ function renderSQDQuestions() {
   }
 
   let html = '';
-  sqdQuestions.forEach((qText, index) => {
+  (window.sqdQuestions || []).forEach((qText, index) => {
      const qId = `sqd${index}`;
     html += `
       <div class="form-section p-4 rounded-lg" id="${qId}-container">
@@ -561,6 +562,54 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           proceedBtn.classList.remove('hover:opacity-90');
         }
+      }
+    });
+  }
+
+  // --------- BURGER MENU FUNCTIONALITY ---------
+  const burgerBtn = document.getElementById('burgerBtn');
+  const mobileNav = document.getElementById('mobileNav');
+
+  if (burgerBtn && mobileNav) {
+    burgerBtn.addEventListener('click', () => {
+      burgerBtn.classList.toggle('active');
+      mobileNav.classList.toggle('active');
+    });
+
+    // Close menu when clicking on a link and add active state with sliding underline
+    const navLinks = mobileNav.querySelectorAll('a');
+    navLinks.forEach(link => {
+      // Add active class to current page link
+      if (link.href === window.location.href || link.pathname === window.location.pathname) {
+        link.classList.add('active');
+      }
+
+      link.addEventListener('click', () => {
+        // Remove active class from all links
+        navLinks.forEach(l => l.classList.remove('active'));
+        // Add active class to clicked link
+        link.classList.add('active');
+        // Close menu
+        burgerBtn.classList.remove('active');
+        mobileNav.classList.remove('active');
+      });
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
+        burgerBtn.classList.remove('active');
+        mobileNav.classList.remove('active');
+      }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (mobileNav.classList.contains('active') && 
+          !mobileNav.contains(e.target) && 
+          !burgerBtn.contains(e.target)) {
+        burgerBtn.classList.remove('active');
+        mobileNav.classList.remove('active');
       }
     });
   }
